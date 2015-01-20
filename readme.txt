@@ -1,9 +1,9 @@
-=== Chamber Dashboard Business Directory ===
+=== Chamber Dashboard Member Manager ===
 Contributors: gwendydd
 Tags: Chamber of Commerce, business directory, businesses, membership, membership fees
 Donate link: http://chamberdashboard.com/donate
 Requires at least: 3.8
-Tested up to: 4.0
+Tested up to: 4.1
 Stable tag: trunk
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
