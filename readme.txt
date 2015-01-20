@@ -1,4 +1,4 @@
-=== Chamber Dashboard Member Manager ===
+=== Chamber Dashboard Business Directory ===
 Contributors: gwendydd
 Tags: Chamber of Commerce, business directory, businesses, membership, membership fees
 Donate link: http://chamberdashboard.com/donate
@@ -77,6 +77,8 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.1 = 
+* Added "email invoice" button to add/edit invoice page
 
 = 1.0 =
 * First release

@@ -49,13 +49,12 @@
 	<label><?php _e( 'Notification history', 'cdashmm' ); ?></label>
 	<?php $meta = get_post_meta(get_the_id()); 
 	$oldnotifications = get_post_meta( get_the_id(), '_cdashmm_notification' ); ?>
-	<pre><?php echo print_r($oldnotifications, true); ?></pre>
 		<?php while($mb->have_fields_and_multi('notification')): ?>
 		<?php $mb->the_group_open(); ?>
 
 			<p><?php $mb->the_field('notification_date'); ?>
 			<strong><?php _e('Date', 'cdashmm'); ?>:</strong> <?php $mb->the_value(); ?>
-			<input type="hidden" class="notification_date" name="<?php $mb->the_name(); ?>" value="<?php $mb->the_value(); ?>"/>
+			<input type="hidden" class="notification_date" name="<?php $mb->the_name(); ?>" value="<?php $mb->the_value(); ?>"/><br />
 
 			<?php $mb->the_field('notification_to'); ?>
 			<strong><?php _e('Recipient(s)', 'cdashmm'); ?></label>:</strong> <?php $mb->the_value(); ?>

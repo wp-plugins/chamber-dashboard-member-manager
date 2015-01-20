@@ -3,7 +3,7 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership-based organization
-Version: 1.0
+Version: 1.1
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 */
@@ -396,17 +396,17 @@ $invoice_metabox = new WPAlchemy_MetaBox(array
 ));
 
 // Create metabox for invoice emails
-//$notification_metabox = new WPAlchemy_MetaBox(array
-//(
-//    'id' => 'notification_meta',
-//    'title' => 'Email Invoice',
-//    'types' => array('invoice'),
-//    'template' => plugin_dir_path( __FILE__ ) . '/includes/invoice_notification.php',
-//    'mode' => WPALCHEMY_MODE_EXTRACT,
-//    'prefix' => '_cdashmm_',
-//    'context' => 'side',
-//    'priority' => 'default'
-//));
+$notification_metabox = new WPAlchemy_MetaBox(array
+(
+    'id' => 'notification_meta',
+    'title' => 'Email Invoice',
+    'types' => array('invoice'),
+    'template' => plugin_dir_path( __FILE__ ) . '/includes/invoice_notification.php',
+    'mode' => WPALCHEMY_MODE_EXTRACT,
+    'prefix' => '_cdashmm_',
+    'context' => 'side',
+    'priority' => 'default'
+));
 
 // Enqueue JS for invoice metabox
 function my_enqueue($hook) {
@@ -940,8 +940,9 @@ function cdashmm_send_invoice_notification_email() {
                 'notification_date' => $today,
                 'notification_to' => $to,
             );
-        $all_notifications = array_push( $notification_array, $new_notification );
-        add_post_meta( $invoiceid, '_cdashmm_notification', $all_notifications ); 
+        $notification_array[] = $new_notification;
+
+        update_post_meta( $invoiceid, '_cdashmm_notification', $notification_array ); 
 
     } else {
         $fields = array( '_cdashmm_notification' );

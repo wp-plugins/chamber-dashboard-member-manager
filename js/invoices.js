@@ -54,8 +54,8 @@ jQuery(document).ready(function ($) {
 
         $.post(url, data, function (response) {
             $("#result").html(response.message);
-            $(".notification_to").slice(-2, -1).val(response.to);
-            $(".notification_date").slice(-2, -1).val(response.today);
+            $(".notification_to").last().val(response.to);
+            $(".notification_date").last().val(response.today);
 
         });
 
