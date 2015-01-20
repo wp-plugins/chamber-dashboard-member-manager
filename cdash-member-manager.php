@@ -7,7 +7,6 @@ Version: 1.1
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 */
-
 /*  Copyright 2014 Morgan Kay and the Fremont Chamber of Commerce (email : info@chamberdashboard.com)
 
     This program is free software; you can redistribute it and/or modify
@@ -24,12 +23,9 @@ Author URI: http://wpalchemists.com
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-
 // ------------------------------------------------------------------------
 // REQUIRE MINIMUM VERSION OF WORDPRESS:                                               
 // ------------------------------------------------------------------------
-
-
 function cdashmm_requires_wordpress_version() {
     global $wp_version;
     $plugin = plugin_basename( __FILE__ );
