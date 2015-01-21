@@ -1,0 +1,24 @@
+.invoice-header:after {
+display: table;
+content: '';
+clear: both;
+}
+
+.invoice-header .invoice-header-contact {
+	float: left;
+	width: 60%;
+}
+
+.invoice-header .invoice-header-details {
+	float: right;
+	width: 35%;
+}
+
+#invoice .invoice-header h4 {
+	margin: 0;
+	padding: 0;
+}
+
+#invoice .invoice-header-details li {
+	list-style-type: none;
+}
