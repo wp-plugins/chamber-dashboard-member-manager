@@ -3,10 +3,11 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.1
+Version: 1.1.1
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 */
+
 /*  Copyright 2014 Morgan Kay and the Fremont Chamber of Commerce (email : info@chamberdashboard.com)
 
     This program is free software; you can redistribute it and/or modify
@@ -23,9 +24,11 @@ Author URI: http://wpalchemists.com
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+
 // ------------------------------------------------------------------------
 // REQUIRE MINIMUM VERSION OF WORDPRESS:                                               
 // ------------------------------------------------------------------------
+
 function cdashmm_requires_wordpress_version() {
     global $wp_version;
     $plugin = plugin_basename( __FILE__ );
@@ -365,44 +368,47 @@ add_action( 'p2p_init', 'cdashmm_businesses_and_invoices' );
 // ADD CUSTOM META BOXES
 // ------------------------------------------------------------------------
 
-// Create metabox for businesses to display next payment due date
-$membership_metabox = new WPAlchemy_MetaBox(array
-(
-    'id' => 'membership_renewal',
-    'title' => 'Membership Renewal',
-    'types' => array('business'),
-    'template' => plugin_dir_path( __FILE__ ) . '/includes/membership_renewal.php',
-    'mode' => WPALCHEMY_MODE_EXTRACT,
-    'prefix' => '_cdashmm_',
-    'context' => 'side',
-    'priority' => 'high'
-));
+if( class_exists( 'WPAlchemy_MetaBox' ) ) {
+    // Create metabox for businesses to display next payment due date
+    $membership_metabox = new WPAlchemy_MetaBox(array
+    (
+        'id' => 'membership_renewal',
+        'title' => 'Membership Renewal',
+        'types' => array('business'),
+        'template' => plugin_dir_path( __FILE__ ) . '/includes/membership_renewal.php',
+        'mode' => WPALCHEMY_MODE_EXTRACT,
+        'prefix' => '_cdashmm_',
+        'context' => 'side',
+        'priority' => 'high'
+    ));
 
-// Create metabox for invoices
-$invoice_metabox = new WPAlchemy_MetaBox(array
-(
-    'id' => 'invoice_meta',
-    'title' => 'Invoice Details',
-    'types' => array('invoice'),
-    'template' => plugin_dir_path( __FILE__ ) . '/includes/invoice_meta.php',
-    'mode' => WPALCHEMY_MODE_EXTRACT,
-    'prefix' => '_cdashmm_',
-    'context' => 'normal',
-    'priority' => 'high'
-));
+    // Create metabox for invoices
+    $invoice_metabox = new WPAlchemy_MetaBox(array
+    (
+        'id' => 'invoice_meta',
+        'title' => 'Invoice Details',
+        'types' => array('invoice'),
+        'template' => plugin_dir_path( __FILE__ ) . '/includes/invoice_meta.php',
+        'mode' => WPALCHEMY_MODE_EXTRACT,
+        'prefix' => '_cdashmm_',
+        'context' => 'normal',
+        'priority' => 'high'
+    ));
 
-// Create metabox for invoice emails
-$notification_metabox = new WPAlchemy_MetaBox(array
-(
-    'id' => 'notification_meta',
-    'title' => 'Email Invoice',
-    'types' => array('invoice'),
-    'template' => plugin_dir_path( __FILE__ ) . '/includes/invoice_notification.php',
-    'mode' => WPALCHEMY_MODE_EXTRACT,
-    'prefix' => '_cdashmm_',
-    'context' => 'side',
-    'priority' => 'default'
-));
+    // Create metabox for invoice emails
+    $notification_metabox = new WPAlchemy_MetaBox(array
+    (
+        'id' => 'notification_meta',
+        'title' => 'Email Invoice',
+        'types' => array('invoice'),
+        'template' => plugin_dir_path( __FILE__ ) . '/includes/invoice_notification.php',
+        'mode' => WPALCHEMY_MODE_EXTRACT,
+        'prefix' => '_cdashmm_',
+        'context' => 'side',
+        'priority' => 'default'
+    ));
+}
+
 
 // Enqueue JS for invoice metabox
 function my_enqueue($hook) {

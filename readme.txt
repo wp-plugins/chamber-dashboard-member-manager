@@ -77,6 +77,9 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.1.1 =
+* Stopped the plugin from generating fatal errors if Business Directory isn't installed
+ 
 = 1.1 = 
 * Added "email invoice" button to add/edit invoice page
 
