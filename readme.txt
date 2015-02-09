@@ -77,6 +77,15 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.4 =
+* Increased compatibility with Chamber Dashboard Business Directory
+
+= 1.3 =
+* Added "orderby" and "exclude" parameters to membership_levels shortcode
+
+= 1.2 =
+* Invoices are automatically marked as overdue
+
 = 1.1.1 =
 * Stopped the plugin from generating fatal errors if Business Directory isn't installed
  

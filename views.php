@@ -10,19 +10,24 @@ function cdashmm_membership_levels_shortcode( $atts ) {
 	extract( shortcode_atts(
 		array(
 			'orderby' => 'priority', // options: name, count, priority
+			'exclude' => '',
+			'order' => 'ASC'
 		), $atts )
 	);
 
 	// get all of the membership levels
 	if( $orderby == 'priority' ) {
-		$args = 'orderby=term_order&order=ASC&hide_empty=0';
+		$args = 'orderby=term_order&order='.$order.'&hide_empty=0';
 	} elseif( $orderby == 'name' ) {
-		$args = 'orderby=name&order=ASC&hide_empty=0';
+		$args = 'orderby=name&order='.$order.'&hide_empty=0';
 	}
 	elseif( $orderby == 'count' ) {
-		$args = 'orderby=count&order=DESC&hide_empty=0';
+		$args = 'orderby=count&order='.$order.'&hide_empty=0';
 	} else {
 		$args = 'hide_empty=0'; 
+	}
+	if( '' !== 'exclude' ) {
+		$args .= '&exclude=' . $exclude;
 	}
 
 	$levels = get_terms( 'membership_level', $args );

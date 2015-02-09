@@ -3,7 +3,7 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.1.1
+Version: 1.4
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 */
@@ -92,6 +92,7 @@ function cdashmm_language_init() {
 }
 add_action('init', 'cdashmm_language_init');
 
+define( 'CDASHMM_STATUS', 'installed' );
 
 // ------------------------------------------------------------------------
 // FILTER SO WE CAN SEARCH BY TITLE
@@ -306,52 +307,6 @@ add_filter( 'wp_unique_post_slug', 'cdashmm_obfuscate_invoice_slug', 10, 4 );
 // https://github.com/scribu/wp-posts-to-posts/blob/master/posts-to-posts.php
 // ------------------------------------------------------------------------
 
-function cdashmm_p2p_check() {
-    if ( !class_exists( 'P2P_Autoload' ) ) {
-        require_once dirname( __FILE__ ) . '/wpp2p/autoload.php';
-    }
-    if( !defined( 'P2P_PLUGIN_VERSION') ) {
-        define( 'P2P_PLUGIN_VERSION', '1.6.3' );
-    }
-    if( !defined( 'P2P_TEXTDOMAIN') ) {
-        define( 'P2P_TEXTDOMAIN', 'cdashmm' );
-    }
-}
-add_action( 'admin_init', 'cdashmm_p2p_check' );
-
-function cdashmm_p2p_load() {
-        if ( !function_exists( 'p2p_register_connection_type' ) ) {
-            require_once dirname( __FILE__ ) . '/wpp2p/autoload.php';
-        }
-        P2P_Storage::init();
-        P2P_Query_Post::init();
-        P2P_Query_User::init();
-        P2P_URL_Query::init();
-        P2P_Widget::init();
-        P2P_Shortcodes::init();
-        register_uninstall_hook( __FILE__, array( 'P2P_Storage', 'uninstall' ) );
-        if ( is_admin() )
-            cdashmm_load_admin();
-}
-
-function cdashmm_load_admin() {
-        P2P_Autoload::register( 'P2P_', dirname( __FILE__ ) . '/wpp2p/admin' );
-        new P2P_Box_Factory;
-        new P2P_Column_Factory;
-        new P2P_Dropdown_Factory;
-        new P2P_Tools_Page;
-}
-
-function cdashmm_p2p_init() {
-    // Safe hook for calling p2p_register_connection_type()
-        do_action( 'p2p_init' );
-}
-
-require dirname( __FILE__ ) . '/wpp2p/scb/load.php';
-scb_init( 'cdashmm_p2p_load' );
-add_action( 'wp_loaded', 'cdashmm_p2p_init' );
-
-
 // Create the connection between businesses and invoices
 function cdashmm_businesses_and_invoices() {
     p2p_register_connection_type( array(
@@ -485,7 +440,7 @@ function cdashmm_insert_invoice_id( $post_id ) {
         '_cdashmm_item_membershipamt',
         '_cdashmm_item_donation', 
         '_cdashmm_paidamt', 
-        '_cdasmmh_paiddate',
+        '_cdashmm_paiddate',
         '_cdashmm_paymethod',
         '_cdashmm_transaction' 
         );
@@ -969,5 +924,50 @@ function cdashmm_send_invoice_notification_email() {
 
 }
 add_action( 'wp_ajax_cdashmm_send_invoice_notification_email', 'cdashmm_send_invoice_notification_email' );
+
+// ------------------------------------------------------------------------
+// Cron job - once a day, check for overdue invoices and mark them overdue
+// ------------------------------------------------------------------------
+
+if ( ! wp_next_scheduled( 'cdashmm_check_for_overdue_invoices' ) ) {
+    wp_schedule_event( time(), 'daily', 'cdashmm_check_for_overdue_invoices' );
+}
+
+add_action( 'cdashmm_check_for_overdue_invoices', 'cdashmm_update_overdue_invoices' );
+
+function cdashmm_update_overdue_invoices() {
+    // get today's date
+    $today = date('Y-m-d');
+
+    // get overdue status
+    $overdue_status = get_term_by( 'slug', 'overdue', 'invoice_status' );
+
+    // find invoices with a due date earlier than today
+    $args = array( 
+        'post_type' => 'invoice',
+        'post_status' => 'any',
+        'posts_per_page' => -1,                  
+        'meta_key' => '_cdashmm_duedate',
+        'meta_value' => $today,
+        'meta_compare' => '<', 
+    );
+    
+    $overdue = new WP_Query( $args );
+
+    if ( $overdue->have_posts() ) :
+        while ( $overdue->have_posts() ) : $overdue->the_post();
+            // update invoice status
+            wp_set_object_terms( get_the_id(), $overdue_status->term_id, 'invoice_status', false );
+        endwhile;
+    endif;
+    wp_reset_postdata();
+    
+}
+
+// remove the cron job on deactivation
+register_deactivation_hook( __FILE__, 'cdashmm_remove_overdue_invoice_cron_job' );
+function cdashmm_remove_overdue_invoice_cron_job() {
+    wp_clear_scheduled_hook( 'cdashmm_check_for_overdue_invoices' );
+}
 
 ?>
