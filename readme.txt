@@ -77,6 +77,9 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.5.1 = 
+* improved compatibility
+
 = 1.5 =
 * added payment button to invoice view
 * added ability to add as many items as needed to invoices

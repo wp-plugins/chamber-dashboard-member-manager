@@ -3,7 +3,7 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.5
+Version: 1.5.1
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 */
@@ -307,17 +307,19 @@ add_filter( 'wp_unique_post_slug', 'cdashmm_obfuscate_invoice_slug', 10, 4 );
 // https://github.com/scribu/wp-posts-to-posts/blob/master/posts-to-posts.php
 // ------------------------------------------------------------------------
 
-// Create the connection between businesses and invoices
-function cdashmm_businesses_and_invoices() {
-    p2p_register_connection_type( array(
-        'name' => 'invoices_to_businesses',
-        'from' => 'invoice',
-        'to' => 'business',
-        'cardinality' => 'many-to-one',
-        'admin_column' => 'from',
-    ) );
+if( is_plugin_active( 'chamber-dashboard-business-directory/cdash-business-directory.php' ) ) {
+    // Create the connection between businesses and invoices
+    function cdashmm_businesses_and_invoices() {
+        p2p_register_connection_type( array(
+            'name' => 'invoices_to_businesses',
+            'from' => 'invoice',
+            'to' => 'business',
+            'cardinality' => 'many-to-one',
+            'admin_column' => 'from',
+        ) );
+    }
+    add_action( 'p2p_init', 'cdashmm_businesses_and_invoices' );
 }
-add_action( 'p2p_init', 'cdashmm_businesses_and_invoices' );
 
 // ------------------------------------------------------------------------
 // ADD CUSTOM META BOXES
