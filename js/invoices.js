@@ -10,18 +10,47 @@ jQuery(document).ready(function ($) {
         // update the membership cost
         $.post(url, data, function (response) {
             $("#item_membershipamt").val(response);
-            var val1 = +$("#item_donation").val();
-            var val2 = +$("#item_membershipamt").val();
-            $("#amount").val(val1+val2);
         });
     });
 
-    // when a donation amount is entered, update the total price
-    $("#item_donation").on("change", function(){
-          var val1 = +$("#item_donation").val();
-          var val2 = +$("#item_membershipamt").val();
-          $("#amount").val(val1+val2);
+    $('#calculate').on('click', function (e) {
+        var val1 = +$("#item_donation").val();
+        var val2 = +$("#item_membershipamt").val();
+
+        var $form = $('#post'),
+            $summands = $form.find('.item_amount'),
+            $sumDisplay = $('#amount');
+
+            var sum = 0;
+            $summands.each(function ()
+            {
+                var value = Number($(this).val());
+                if (!isNaN(value)) sum += value;
+            });
+
+            $sumDisplay.val(sum+val1+val2);
+
     });
+
+    $('#publish').on('click', function (e) {
+        var val1 = +$("#item_donation").val();
+        var val2 = +$("#item_membershipamt").val();
+
+        var $form = $('#post'),
+            $summands = $form.find('.item_amount'),
+            $sumDisplay = $('#amount');
+
+            var sum = 0;
+            $summands.each(function ()
+            {
+                var value = Number($(this).val());
+                if (!isNaN(value)) sum += value;
+            });
+
+            $sumDisplay.val(sum+val1+val2);
+
+    });
+
 
     // make the date fields use the datepicker
     dateOptions = {

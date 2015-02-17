@@ -27,7 +27,31 @@
 		</td>
 	</tr>
 
-	<!-- TO DO - add fields for custom line items -->
+	<tr>
+		<th scope="row"><?php _e('Items', 'cdashmm'); ?></th>
+		<td>
+			<?php while($mb->have_fields_and_multi('items')): ?>
+			<?php $mb->the_group_open(); ?>
+		 
+		 		<div class="item name">
+					<?php $mb->the_field('item_name'); ?>
+					<label>Item Name/Description</label>
+					<p><input type="text" name="<?php $mb->the_name(); ?>" value="<?php $mb->the_value(); ?>"/></p>
+				</div>
+		 	
+		 		<div class="item description">
+					<?php $mb->the_field('item_amount'); ?>
+					<label>Amount</label>
+					<p><input type="text" name="<?php $mb->the_name(); ?>" value="<?php $mb->the_value(); ?>" class="item_amount" /></p>
+				</div>
+		 
+				<a href="#" class="dodelete button">Remove Item</a>
+			<?php $mb->the_group_close(); ?>
+			<?php endwhile; ?>
+		 
+			<p class="clearfix"><a class="docopy-items button">Add Another Item</a></p>
+		</td>
+	</tr>
 
 	<tr>
 		<th scope="row"><?php _e('Donation', 'cdashmm'); ?></th>
@@ -38,9 +62,10 @@
 	</tr>
 
 	<tr>
-		<th scope="row"><?php _e('Amount Due', 'cdashmm'); ?></th>
+		<th scope="row"><?php _e('Total Amount Due', 'cdashmm'); ?></th>
 		<td>
 			<input id="amount" type="text" size="10" name="<?php $metabox->the_name('amount'); ?>" value="<?php $metabox->the_value('amount'); ?>"/>
+			<a id="calculate" class="button">Calculate Total</a>
 		</td>
 	</tr>
 

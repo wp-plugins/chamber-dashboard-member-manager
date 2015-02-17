@@ -59,6 +59,7 @@ function cdashmm_membership_signup_form() {
 	wp_enqueue_style( 'cdashmm-membership', plugin_dir_url(__FILE__) . 'css/cdashmm-membership.css' );
 
 	// Enqueue ajax to make the form work
+	wp_enqueue_script( 'html5validate', plugin_dir_url(__FILE__) . 'js/jquery.h5validate.js', array( 'jquery' ) );
 	wp_enqueue_script( 'membership-form', plugin_dir_url(__FILE__) . 'js/membership.js', array( 'jquery' ) );
     wp_localize_script( 'membership-form', 'membershipformajax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
 
@@ -71,7 +72,7 @@ function cdashmm_membership_signup_form() {
 	if( !isset( $currency ) ) {
 		$member_form .= __( 'You have not entered in your currency settings.  In your WordPress dashboard, go to the Chamber Dashboard settings page to select what currency you accept.', 'cdashmm' );
 	} else {
-		$member_form .= '<form id="membership_form" action="https://www.paypal.com/cgi-bin/webscr" method="post">';
+		$member_form .= '<form id="membership_form" action="https://www.sandbox.paypal.com/cgi-bin/webscr" method="post">';
 		// Business Name
 		$member_form .= '<p class="explain">' . __( '* = Required') . '</p>';
 		$member_form .= '<p><label>' . __( 'Business Name *', 'cdashmm' ) . '</label>';
@@ -113,7 +114,11 @@ function cdashmm_membership_signup_form() {
 		$member_form .= '<input name="subtotal" type="hidden" id="subtotal" value="0">';
 		// Donation
 		$member_form .= '<p><label>' . __( 'Optional Donation', 'cdashmm' ) . '</label>';
-		$member_form .= '<input name="donation" type="number" id="donation"></p>';
+		$member_form .= '<input name="donation" type="number" id="donation" value="' . $options['suggested_donation'] . '">';
+		if( isset( $options['donation_explanation'] ) ) {
+			$member_form .= '<br /><span class="donation_explanation">' . $options['donation_explanation'] . '</span>';
+		}
+		$member_form .= '</p>';
 		// Total
 		$member_form .= '<p class="total"><label>' . __( 'Total Due: ', 'cdashmm' ) . '</label>'; 
 		$member_form .= '<input name="total" id="total" value="0" disabled></p>';
@@ -134,7 +139,7 @@ function cdashmm_membership_signup_form() {
 		$member_form .= '<input type="hidden" name="custom" id="invoice_id" value="' . cdashmm_calculate_invoice_number() . '">';
 		$member_form .= '<input type="hidden" name="cbt" value="Return to ' . $options['orgname'] . '">';
 		$member_form .= '<input type="hidden" name="notify_url" value="' . home_url() . '/?cdash-member-manager=paypal-ipn">';
-		$member_form .= '<p><input type="submit" value="' . __( 'Submit', 'cdashmm' ) . '"></p>';
+		$member_form .= '<p><input type="submit" value="' . __( 'Pay Now With PayPal', 'cdashmm' ) . '"></p>';
 		$member_form .= '</form>';
 	}
 
@@ -528,8 +533,11 @@ function cdashmm_single_invoice( $content ) {
         	$duedate = __( 'Invoice due on receipt', 'cdashmm' );
         }
 
+        $cdash_options = get_option( 'cdash_directory_options' );
+    	$currency = $cdash_options['currency'];
+
 		$invoice_content = 
-		'<div id="invoice">
+		'<div id="invoice" class="' . $this_status . '">
 			<div class="invoice-header">
 				<div class="invoice-header-contact">
 					<div class="invoice-from">
@@ -559,11 +567,22 @@ function cdashmm_single_invoice( $content ) {
 					<th>Amount</th>
 				</tr>';
 				if( isset( $invoice_meta['item_membershiplevel'] ) && isset( $invoice_meta['item_membershipamt'] ) ) {
+					$level = get_term_by( 'id', $invoice_meta['item_membershiplevel'], 'membership_level' );
 					$invoice_content .=
 					'<tr>
-						<td>' . $invoice_meta['item_membershiplevel'] . '</td>
+						<td>' . __( 'Membership: ', 'cdashmm' ) . $level->name . '</td>
 						<td>' . cdashmm_display_price( $invoice_meta['item_membershipamt'] ) . '</td>
 					</tr>';
+				}
+				if( isset( $invoice_meta['items'] ) ) {
+					$items = $invoice_meta['items'];
+					foreach( $items as $item ) {
+						$invoice_content .=
+						'<tr>
+							<td>' . $item['item_name'] . '</td>
+							<td>' . cdashmm_display_price( $item['item_amount'] ) . '</td>
+						</tr>';
+					}
 				}
 				if( isset( $invoice_meta['item_donation'] ) ) {
 					$invoice_content .=
@@ -573,15 +592,61 @@ function cdashmm_single_invoice( $content ) {
 					</tr>';
 				}
 				$invoice_content .=
-				'<tr>
-					<td>' . __( 'Total', 'cdashmm') . '</td>
-					<td>' . cdashmm_display_price( $invoice_meta['amount'] ) . '</td>
+				'<tr class="total">
+					<td><strong>' . __( 'Total', 'cdashmm') . '</strong></td>
+					<td><strong>' . cdashmm_display_price( $invoice_meta['amount'] ) . '</strong></td>
 				</tr>
 			</table>
 			<div class="invoice-footer">
 				' . do_shortcode( wpautop( $options['invoice_footer'] ) ) . '
-			</div>
-		</div>';
+			</div>';
+
+			// the invoice hasn't been paid, so we'll include a payment button
+			if( 'Paid' !== $this_status ) {
+				$invoice_content .=
+				'<div class="payment-form">
+					<form id="invoice_form" action="https://www.paypal.com/cgi-bin/webscr" method="post">
+						<input type="hidden" name="cmd" value="_cart">
+						<input type="hidden" name="upload" value="1" />
+						<input type="hidden" name="business" value="' . $options['paypal_email'] . '">
+						<input type="hidden" name="return" value="' . get_the_permalink() . '">
+						<input type="hidden" name="currency_code" value="' . $currency . '">';
+						// membership amount, if needed
+						$i = 1;
+						if( isset( $invoice_meta['item_membershipamt'] ) ) {
+							$invoice_content .=
+							'<input type="hidden" name="item_name_'.$i.'" value="Membership">
+							<input type="hidden" name="amount_'.$i.'" id="amount_'.$i.'" value="' . $invoice_meta['item_membershipamt'] . '">';
+							$i++;
+						}
+						// other items, if needed 
+						if( isset( $invoice_meta['items'] ) ) {
+							$items = $invoice_meta['items'];
+							foreach( $items as $item ) {
+								$invoice_content .=
+								'<input type="hidden" name="item_name_'.$i.'" value="'.$item['item_name'].'">
+								<input type="hidden" name="amount_'.$i.'" id="amount_'.$i.'" value="' . $item['item_amount'] . '">';
+								$i++;
+							}
+
+						}
+						// donation amount, if needed
+						if( isset( $invoice_meta['item_donation']) ) {
+							$invoice_content .=
+							'<input type="hidden" name="item_name_'.$i.'" value="Donation">
+							<input type="hidden" name="amount_'.$i.'" id="amount_'.$i.'" value="' . $invoice_meta['item_donation'] . '">';
+						}
+						$invoice_content .=
+						'<input type="hidden" name="rm" value="2">
+						<input type="hidden" name="custom" id="invoice_id" value="' . $invoice_meta['invoice_number'] . '">
+						<input type="hidden" name="cbt" value="Return to ' . $options['orgname'] . '">
+						<input type="hidden" name="notify_url" value="' . home_url() . '/?cdash-member-manager=paypal-ipn">
+						<p><input type="submit" value="' . __( 'Pay Now', 'cdashmm' ) . '"></p>
+					</form>
+				</div>';
+			}
+		$invoice_content .=
+		'</div>';
 
 		$content = $invoice_content;
 	} 

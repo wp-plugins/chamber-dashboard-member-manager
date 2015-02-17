@@ -3,7 +3,7 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.4
+Version: 1.5
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 */
@@ -790,9 +790,28 @@ function cdashmm_calculate_invoice_number() {
     $invoices = new WP_Query( $args );
 
     if ( $invoices->have_posts() ) :
-        return $invoices->found_posts;
+        $newinvoice = $invoices->found_posts;
+        $invoicenumber = cdashmm_check_for_duplicate_invoice_number( $newinvoice );
     endif;
+    wp_reset_postdata();
 
+    return $invoicenumber;    
+}
+
+function cdashmm_check_for_duplicate_invoice_number( $number ) {
+    $args = array( 
+        'post_type' => 'invoice',
+        'meta_key' => '_cdashmm_invoice_number',
+        'meta_value' => $number, 
+    );
+
+    $thisinvoice = new WP_Query( $args );
+
+    if ( $thisinvoice->have_posts() ) {
+        // we need to find another invoice number
+        $number = cdashmm_check_for_duplicate_invoice_number( $number + 1 );
+    } 
+    return $number;
     wp_reset_postdata();
 }
 
@@ -924,6 +943,9 @@ function cdashmm_send_invoice_notification_email() {
 
 }
 add_action( 'wp_ajax_cdashmm_send_invoice_notification_email', 'cdashmm_send_invoice_notification_email' );
+
+
+
 
 // ------------------------------------------------------------------------
 // Cron job - once a day, check for overdue invoices and mark them overdue

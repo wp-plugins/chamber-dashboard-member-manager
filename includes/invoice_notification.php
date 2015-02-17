@@ -3,37 +3,44 @@
 	<form id="invoice_email">
 		<label><?php _e( 'Send Invoice Notification To:', 'cdashmm' ); ?></label>
 			<?php
-			// Find connected business
-			$connected = new WP_Query( array(
-			  'connected_type' => 'invoices_to_businesses',
-			  'connected_items' => $_GET['post'],
-			  'nopaging' => true,
-			) );
+				if( isset( $_GET['post'] ) ) {
+				// Find connected business
+				$connected = new WP_Query( array(
+				  'connected_type' => 'invoices_to_businesses',
+				  'connected_items' => $_GET['post'],
+				  'nopaging' => true,
+				) );
 
-			if ( $connected->have_posts() ) :
-				while ( $connected->have_posts() ) : $connected->the_post();
-					// get the billing email 
-					global $billing_metabox;
-					$billingmeta = $billing_metabox->the_meta();
-					if( isset ( $billingmeta['billing_email'] ) ) { ?>
-			    		<input type="checkbox" name="send_to[]" class="send_to" value="<?php echo $billingmeta['billing_email']; ?>"><?php echo $billingmeta['billing_email']; ?><br />
-			    	<?php }
-			    	// get other associated emails
-			    	global $buscontact_metabox;
-					$contactmeta = $buscontact_metabox->the_meta();
-					$locations = $contactmeta['location'];
-						foreach($locations as $location) {
-							if( isset( $location['email'] ) && is_array( $location['email'] ) ) {
-								$emails = $location['email'];
-								foreach( $emails as $email ) { ?>
-									<input type="checkbox" name="send_to[]" class="send_to" value="<?php echo $email['emailaddress']; ?>"><?php echo $email['emailaddress']; ?><br />
-								<?php }
+				if ( $connected->have_posts() ) {
+					while ( $connected->have_posts() ) : $connected->the_post();
+						// get the billing email 
+						global $billing_metabox;
+						$billingmeta = $billing_metabox->the_meta();
+						if( isset ( $billingmeta['billing_email'] ) ) { ?>
+				    		<input type="checkbox" name="send_to[]" class="send_to" value="<?php echo $billingmeta['billing_email']; ?>"><?php echo $billingmeta['billing_email']; ?><br />
+				    	<?php }
+				    	// get other associated emails
+				    	global $buscontact_metabox;
+						$contactmeta = $buscontact_metabox->the_meta();
+						$locations = $contactmeta['location'];
+							foreach($locations as $location) {
+								if( isset( $location['email'] ) && is_array( $location['email'] ) ) {
+									$emails = $location['email'];
+									foreach( $emails as $email ) { ?>
+										<input type="checkbox" name="send_to[]" class="send_to" value="<?php echo $email['emailaddress']; ?>"><?php echo $email['emailaddress']; ?><br />
+									<?php }
+								}
 							}
-						}
-				endwhile; 
+					endwhile; 
+				} else {
+					_e( 'Before you can send this invoice, you must connect it to a business (see the "Connected Businesses" box below this one).', 'cdashmm' );
+				}
 				wp_reset_postdata(); 
 				$post = get_post( $_GET['post'] ); // this is weird.  this query destroys $post, and resetting postdata doesn't reset it, so I had to add this
-			endif;	?>
+			} else {
+				_e( 'You must save this invoice before you can send it.', 'cdashmm' );
+			}
+			?>
 		<label><?php _e( 'Send Copy To:', 'cdashmm' ); ?></label>
 			<input type="checkbox" name="copy_to[]" class="copy_to" value="<?php echo get_option( 'admin_email' ); ?>"><?php echo get_option( 'admin_email' ); ?><br />
 		<label><?php _e( 'Custom Message:', 'cdashmm' ); ?></label>

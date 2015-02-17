@@ -68,7 +68,7 @@ jQuery(document).ready(function ($) {
 
     });
 
-// when user hits the submit button, create/update the business and create the invoice
+// when user hits the submit button on the become a member page, create/update the business and create the invoice
     $('#membership_form').on('submit', function (e) {
         
         var url = membershipformajax.ajaxurl;
@@ -109,5 +109,8 @@ jQuery(document).ready(function ($) {
         });
 
     });
+
+// make membership form validate
+$('form').h5Validate();
 
 });

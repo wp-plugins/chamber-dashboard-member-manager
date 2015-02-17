@@ -26,6 +26,7 @@ function cdashmm_add_defaults() {
 					"receipt_from_name" => get_bloginfo( 'name' ),
 					"receipt_from_email" => get_bloginfo( 'admin_email' ),
 					"admin_email" => get_bloginfo( 'admin_email' ),
+					"suggested_donation" => '0',
 
 		);
 		update_option('cdashmm_options', $arr);
@@ -157,6 +158,22 @@ function cdashmm_render_form() {
 						</td>
 					</tr>
 
+					<tr>
+						<th scope="row"><?php _e('Suggested Donation Amount', 'cdashmm'); ?></th>
+						<td>
+							<input type="text" size="35" name="cdashmm_options[suggested_donation]" value="<?php if(isset($options['suggested_donation'])) { echo $options['suggested_donation']; } ?>" />
+							<br /><span style="color:#666666;margin-left:2px;"><?php _e('The membership form includes a field for optional donation.  If you want this field to be pre-filled with a donation amount, enter that amount here (number only, no currency symbols).', 'cdashmm'); ?></span><br />
+						</td>
+					</tr>
+
+					<tr>
+						<th scope="row"><?php _e('Suggested Donation Text', 'cdashmm'); ?></th>
+						<td>
+							<textarea name="cdashmm_options[donation_explanation]" rows="7" cols="50" type='textarea'><?php echo $options['donation_explanation']; ?></textarea><br />
+							<span style="color:#666666;margin-left:2px;"><?php _e('This text will appear on the membership form next to the suggested donation field.  It can include information about how your donation will be used, such as "Your donation supports local schools."', 'cdashmm'); ?></span>
+						</td>
+					</tr>
+
 				</table>
 				<p class="submit">
 					<input type="submit" class="button-primary" value="<?php _e('Save Changes', 'cdashmm') ?>" />
@@ -183,6 +200,8 @@ function cdashmm_validate_options($input) {
 	$input['receipt_from_name'] =  wp_filter_nohtml_kses($input['receipt_from_name']);
 	$input['receipt_from_email'] =  wp_filter_nohtml_kses($input['receipt_from_email']);
 	$input['admin_email'] =  wp_filter_nohtml_kses($input['admin_email']);
+	$input['suggested_donation'] =  wp_filter_nohtml_kses($input['suggested_donation']);
+	$input['donation_explanation'] =  wp_filter_nohtml_kses($input['donation_explanation']);
 
 	// $input['txt_one'] =  wp_filter_nohtml_kses($input['txt_one']); // Sanitize textbox input (strip html tags, and escape characters)
 	return $input;
