@@ -307,7 +307,7 @@ add_filter( 'wp_unique_post_slug', 'cdashmm_obfuscate_invoice_slug', 10, 4 );
 // https://github.com/scribu/wp-posts-to-posts/blob/master/posts-to-posts.php
 // ------------------------------------------------------------------------
 
-if( is_plugin_active( 'chamber-dashboard-business-directory/cdash-business-directory.php' ) ) {
+if( class_exists( 'P2P_Autoload' ) ) {
     // Create the connection between businesses and invoices
     function cdashmm_businesses_and_invoices() {
         p2p_register_connection_type( array(
