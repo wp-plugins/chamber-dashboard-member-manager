@@ -72,7 +72,7 @@ function cdashmm_membership_signup_form() {
 	if( !isset( $currency ) ) {
 		$member_form .= __( 'You have not entered in your currency settings.  In your WordPress dashboard, go to the Chamber Dashboard settings page to select what currency you accept.', 'cdashmm' );
 	} else {
-		$member_form .= '<form id="membership_form" action="https://www.sandbox.paypal.com/cgi-bin/webscr" method="post">';
+		$member_form .= '<form id="membership_form" action="https://www.paypal.com/cgi-bin/webscr" method="post">';
 		// Business Name
 		$member_form .= '<p class="explain">' . __( '* = Required') . '</p>';
 		$member_form .= '<p><label>' . __( 'Business Name *', 'cdashmm' ) . '</label>';
