@@ -1,4 +1,7 @@
 jQuery(document).ready(function ($) {
+    var numberify = function(numberString) {
+      return Number(numberString.replace(/[^0-9.]/g, ''))
+    }
     // When someone picks a membership level, add the price to the total
     $('#level').change(function (evt) {
         var url = invoiceajax.ajaxurl;
@@ -13,25 +16,26 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    // add up the total invoice amount when someone clicks the calculate button
     $('#calculate').on('click', function (e) {
-        var val1 = +$("#item_donation").val();
-        var val2 = +$("#item_membershipamt").val();
+        var val1 = numberify($("#item_donation").val());
+        var val2 = numberify($("#item_membershipamt").val());
 
         var $form = $('#post'),
-            $summands = $form.find('.item_amount'),
-            $sumDisplay = $('#amount');
+        $summands = $form.find('.item_amount');
 
-            var sum = 0;
-            $summands.each(function ()
-            {
-                var value = Number($(this).val());
-                if (!isNaN(value)) sum += value;
-            });
+        var sum = 0;
+        $summands.each(function ()
+        {
+            var value = numberify($(this).val());
+            if (!isNaN(value)) sum += value;
+        });
 
-            $sumDisplay.val(sum+val1+val2);
+        $('#amount').val(sum+val1+val2);
 
     });
 
+    // add up the total invoice amount right before it is saved
     $('#publish').on('click', function (e) {
         var val1 = +$("#item_donation").val();
         var val2 = +$("#item_membershipamt").val();

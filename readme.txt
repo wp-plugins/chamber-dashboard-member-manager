@@ -77,6 +77,9 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.5.2 =
+* fixed bug where invoices couldn't calculate total if numbers had commas
+
 = 1.5.1 = 
 * improved compatibility
 
