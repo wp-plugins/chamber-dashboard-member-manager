@@ -174,9 +174,11 @@ function cdashmm_render_form() {
 						</td>
 					</tr>
 
+					<?php do_action( 'cdashmm_additional_options_fields' ); ?>
+
 				</table>
 				<p class="submit">
-					<input type="submit" class="button-primary" value="<?php _e('Save Changes', 'cdashmm') ?>" />
+					<input type="submit" class="button-primary" value="<?php _e( 'Save Changes', 'cdashmm' ); ?>" />
 				</p> 
 			</form>
 
@@ -191,8 +193,6 @@ function cdashmm_render_form() {
 
 // Sanitize and validate input. Accepts an array, return a sanitized array.
 function cdashmm_validate_options($input) {
-	 // strip html from textboxes
-	// $input['textarea_one'] =  wp_filter_nohtml_kses($input['textarea_one']); // Sanitize textarea input (strip html tags, and escape characters)
 	$input['paypal_email'] =  wp_filter_nohtml_kses($input['paypal_email']); 
 	$input['orgname'] =  wp_filter_nohtml_kses($input['orgname']); 
 	$input['receipt_subject'] =  wp_filter_nohtml_kses($input['receipt_subject']); 
@@ -203,7 +203,6 @@ function cdashmm_validate_options($input) {
 	$input['suggested_donation'] =  wp_filter_nohtml_kses($input['suggested_donation']);
 	$input['donation_explanation'] =  wp_filter_nohtml_kses($input['donation_explanation']);
 
-	// $input['txt_one'] =  wp_filter_nohtml_kses($input['txt_one']); // Sanitize textbox input (strip html tags, and escape characters)
 	return $input;
 }
 

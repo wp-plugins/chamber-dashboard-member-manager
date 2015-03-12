@@ -368,7 +368,7 @@ if( class_exists( 'WPAlchemy_MetaBox' ) ) {
 
 
 // Enqueue JS for invoice metabox
-function my_enqueue($hook) {
+function cdashmm_invoice_script_enqueue($hook) {
     global $post;  
     global $reports_page;
   
@@ -418,7 +418,7 @@ function my_enqueue($hook) {
     } 
     
 }
-add_action( 'admin_enqueue_scripts', 'my_enqueue' );
+add_action( 'admin_enqueue_scripts', 'cdashmm_invoice_script_enqueue' );
 
 function cdashmm_update_membership_price() {
  

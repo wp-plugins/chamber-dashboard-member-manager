@@ -38,7 +38,7 @@ function cdashmm_membership_levels_shortcode( $atts ) {
 	foreach( $levels as $level ) {
 		$levels_view .= '<div class="level">';
 		$levels_view .= '<h3>' . $level->name . '</h3>';
-		$levels_view .= do_shortcode( wpautop( get_tax_meta( $level->term_id,'perks' ) ) );
+		$levels_view .= do_shortcode( stripslashes( wpautop( get_tax_meta( $level->term_id,'perks' ) ) ) );
 		$levels_view .= '<p class="price">' . cdashmm_display_price( get_tax_meta( $level->term_id,'cost' ) ) . __(' per year', 'cdashmm' ) . '</p>';
 		$levels_view .= '</div>';
 	}
@@ -134,7 +134,7 @@ function cdashmm_membership_signup_form() {
 		$member_form .= '<input type="hidden" name="item_name_1" value="Membership">';
 		$member_form .= '<input type="hidden" name="amount_1" id="amount_1" value="">';
 		$member_form .= '<input type="hidden" name="item_name_2" value="Donation">';
-		$member_form .= '<input type="hidden" name="amount_2" id="amount_2" value="0">';
+		$member_form .= '<input type="hidden" name="amount_2" id="amount_2" value="' . $options['suggested_donation'] . '">';
 		$member_form .= '<input type="hidden" name="rm" value="2">';
 		$member_form .= '<input type="hidden" name="custom" id="invoice_id" value="' . cdashmm_calculate_invoice_number() . '">';
 		$member_form .= '<input type="hidden" name="cbt" value="Return to ' . $options['orgname'] . '">';

@@ -70,43 +70,50 @@ jQuery(document).ready(function ($) {
 
 // when user hits the submit button on the become a member page, create/update the business and create the invoice
     $('#membership_form').on('submit', function (e) {
-        
-        var url = membershipformajax.ajaxurl;
-        var business_id = $('#business_id').val();
-        var name = $('#name').val();
-        var address = $('#address').val();
-        var city = $('#city').val();
-        var state = $('#state').val();
-        var zip = $('#zip').val();
-        var phone = $('#phone').val();
-        var email = $('#email').val();
-        var membership_level = $('select[name="level"]').val()
-        var member_amt = $('#subtotal').val();
-        var donation = $('#donation').val();
-        var total = $('#total').val();
-        var invoice_id = $('#invoice_id').val();
-        var nonce = $('#cdashmm_membership_nonce').val();
-        var data = {
-            'action': 'cdashmm_process_membership_form',
-            'business_id': business_id,
-            'name': name,
-            'address': address,
-            'city': city,
-            'state': state,
-            'zip': zip,
-            'phone': phone,
-            'email': email,
-            'membership_level': membership_level,
-            'member_amt': member_amt,
-            'donation': donation,
-            'total': total,
-            'invoice_id': invoice_id,
-            'nonce': nonce
-        };
+        if($("#membership_form")[0].checkValidity()) {
 
-        $.post(url, data, function (response) {
-            $("#invoice_id").val(response);
-        });
+            console.log("valid");
+
+            var url = membershipformajax.ajaxurl;
+            var business_id = $('#business_id').val();
+            var name = $('#name').val();
+            var address = $('#address').val();
+            var city = $('#city').val();
+            var state = $('#state').val();
+            var zip = $('#zip').val();
+            var phone = $('#phone').val();
+            var email = $('#email').val();
+            var membership_level = $('select[name="level"]').val()
+            var member_amt = $('#subtotal').val();
+            var donation = $('#donation').val();
+            var total = $('#total').val();
+            var invoice_id = $('#invoice_id').val();
+            var nonce = $('#cdashmm_membership_nonce').val();
+            var data = {
+                'action': 'cdashmm_process_membership_form',
+                'business_id': business_id,
+                'name': name,
+                'address': address,
+                'city': city,
+                'state': state,
+                'zip': zip,
+                'phone': phone,
+                'email': email,
+                'membership_level': membership_level,
+                'member_amt': member_amt,
+                'donation': donation,
+                'total': total,
+                'invoice_id': invoice_id,
+                'nonce': nonce
+            };
+
+            $.post(url, data, function (response) {
+                $("#invoice_id").val(response);
+            });
+            
+        }else console.log("invalid form");
+        
+
 
     });
 
