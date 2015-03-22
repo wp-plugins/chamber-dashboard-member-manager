@@ -22,3 +22,24 @@ clear: both;
 #invoice .invoice-header-details li {
 	list-style-type: none;
 }
+
+@media print {
+	.invoice-from {
+		margin-bottom: 1em;
+	}
+	.invoice-description {
+		margin: 2em 0;
+	}
+	table {
+		width: 100%;
+		margin-bottom: 2em;
+	}
+	th {
+		font-weight: bold;
+	}
+	th, td {
+		border: 1px solid #000 !important;
+		padding: .5em !important;
+	}
+}
+

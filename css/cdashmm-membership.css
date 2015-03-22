@@ -21,3 +21,15 @@
 #membership_form .ui-state-error {
 	box-shadow: 0px 0px 5px #B90504;
 }
+
+#membership_form.loading:after {
+	content: '';
+	display: block;
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background: url('ajax-loader.gif') center center no-repeat rgba(255,255,255,.6);
+	z-index: 1000;
+}

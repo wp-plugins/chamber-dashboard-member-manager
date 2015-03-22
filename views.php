@@ -123,6 +123,9 @@ function cdashmm_membership_signup_form() {
 		$member_form .= '<p class="total"><label>' . __( 'Total Due: ', 'cdashmm' ) . '</label>'; 
 		$member_form .= '<input name="total" id="total" value="0" disabled></p>';
 		$member_form .= '</label>';
+		$member_form .= '<p class="method"><label>' . __( 'Payment Method: ', 'cdashmm' ) . '</label>';
+		$member_form .= '<input name="method" type="radio" value="paypal" checked>&nbsp;' . __( 'PayPal', 'cdashmm' ) . '<br />';
+		$member_form .= '<input name="method" type="radio" value="check">&nbsp;' . __( 'Check', 'cdashmm' );
 		// Hidden: Nonce
 		$member_form .= '<input name="cdashmm_membership_nonce" id="cdashmm_membership_nonce" type="hidden" value="' . wp_create_nonce( 'cdashmm_membership_nonce' ) . '">';
 		// Hidden PayPal fields
@@ -139,7 +142,7 @@ function cdashmm_membership_signup_form() {
 		$member_form .= '<input type="hidden" name="custom" id="invoice_id" value="' . cdashmm_calculate_invoice_number() . '">';
 		$member_form .= '<input type="hidden" name="cbt" value="Return to ' . $options['orgname'] . '">';
 		$member_form .= '<input type="hidden" name="notify_url" value="' . home_url() . '/?cdash-member-manager=paypal-ipn">';
-		$member_form .= '<p><input type="submit" value="' . __( 'Pay Now With PayPal', 'cdashmm' ) . '"></p>';
+		$member_form .= '<p><input type="submit" value="' . __( 'Pay Now', 'cdashmm' ) . '"></p>';
 		$member_form .= '</form>';
 	}
 
@@ -321,6 +324,7 @@ function cdashmm_process_membership_form() {
     $member_amt = $_POST['member_amt'];
     $donation = $_POST['donation'];
     $invoice_id = $_POST['invoice_id'];
+    $options = get_option( 'cdashmm_options' );
 
     // Create or update the business
     if( isset( $business_id ) && $business_id !== '' ) {
@@ -433,17 +437,56 @@ function cdashmm_process_membership_form() {
 	update_post_meta( $invoice, '_cdashmm_item_membershiplevel', $membership_level );
 	update_post_meta( $invoice, '_cdashmm_item_membershipamt', $member_amt );
 	update_post_meta( $invoice, '_cdashmm_item_donation', $donation );
-
-	// mark invoice status as pending for now
-	$pending = get_term_by( 'slug', 'pending', 'invoice_status' );
-	wp_set_post_terms( $invoice, $pending->term_id, 'invoice_status', false );
+	
+	if( "paypal" == $_POST['method'] ) {
+		// if paying with PayPal, mark invoice status as pending for now
+		$pending = get_term_by( 'slug', 'pending', 'invoice_status' );
+		wp_set_post_terms( $invoice, $pending->term_id, 'invoice_status', false );
+	} elseif( "check" == $_POST['method'] ) {
+		// if paying by check, mark invoice status as open
+		$open = get_term_by( 'slug', 'open', 'invoice_status' );
+		wp_set_post_terms( $invoice, $open->term_id, 'invoice_status', false );
+	}
 
 	// connect the invoice to the business
 	p2p_type( 'invoices_to_businesses' )->connect( $invoice, $business_id, array(
 	    'date' => current_time('mysql')
 	) );
 
-    $results = $invoice;
+	// if paying by check, send emails to business and to admin
+	if( "check" == $_POST['method'] ) {
+		// send email receipt to business
+	    $receipt_to = $email;
+	    $receipt_subject = __( 'Invoice from ', 'cdashmm' ) . $options['orgname'];
+	    $receipt_message = $options['check_message'] . "\r\n\r\n";
+    	$receipt_message .= __( 'View the invoice: ', 'cdashmm' ) . get_the_permalink( $invoice ) . "\r\n";
+        $receipt_headers = "From: " . $options['receipt_from_name'] . "<" . $options['receipt_from_email'] . ">\r\n";
+
+        wp_mail( $receipt_to, $receipt_subject, $receipt_message, $receipt_headers );
+
+        // send email to site admin 
+        $admin_to = $options['admin_email'];
+        $admin_subject = __( 'New Payment By Check', 'cdashmm' );
+        $admin_message = get_the_title( $business_id ) . __( ' has just filled out your membership form, and has agree to pay by check.', 'cdashmm' ) . "\r\n";
+        $admin_message .= __( 'Payment amount: ', 'cdashmm' ) . cdashmm_display_price( $total ) . "\r\n\r\n";
+        $admin_message .= __( 'View the invoice: ', 'cdashmm' ) . get_the_permalink( $invoice ) . "\r\n";
+
+        $admin_message .= __( 'View the business: ', 'cdashmm' ) . get_the_permalink( $business_id ) . "\r\n";
+        if( "draft" == get_post_status( $business_id ) ) {
+            $admin_message .= get_the_title( $business_id ) . __( 'is a new business, so you need to publish the new business before it will appear in your member directory.', 'cdashmm' );
+        }
+        $admin_headers = "From: Chamber Dashboard <" . $options['receipt_from_email'] . ">\r\n";
+
+        wp_mail( $admin_to, $admin_subject, $admin_message, $admin_headers );
+    }
+
+	if( "paypal" == $_POST['method'] ) {
+		$results = $invoice;
+	} elseif( "check" == $_POST['method'] ) {
+		$results = get_permalink( $invoice );
+	} else {
+		$results = __( 'No payment method selected', 'cdashmm' );
+	}
 
     die($results);
 }
@@ -473,6 +516,28 @@ function cdashmm_single_invoice_title( $title ) {
 }
 
 add_filter( 'the_title', 'cdashmm_single_invoice_title', 10, 2 );
+
+// add script to footer to print invoice div
+// http://stackoverflow.com/a/7532581/1112258
+function cdashmm_invoice_footer_scripts() { 
+    if( is_singular( 'invoice' ) ) { ?>
+        <script type="text/javascript">
+            function printDiv(divName) {
+		     var printContents = document.getElementById(divName).innerHTML;
+		     var originalContents = document.body.innerHTML;
+
+		     document.body.innerHTML = printContents;
+
+		     window.print();
+
+		     document.body.innerHTML = originalContents;
+}
+        </script>
+<?php }
+}
+add_action('wp_footer', 'cdashmm_invoice_footer_scripts');
+
+
 
 
 // Display single invoice (filter content)
@@ -538,68 +603,71 @@ function cdashmm_single_invoice( $content ) {
 
 		$invoice_content = 
 		'<div id="invoice" class="' . $this_status . '">
-			<div class="invoice-header">
-				<div class="invoice-header-contact">
-					<div class="invoice-from">
-						<h4>From: </h4>
-						' . do_shortcode( wpautop( $options['invoice_from'] ) ) . '
+			<p><input type="button" onclick="printDiv(\'print-invoice\')" value="' . __( 'Print Invoice', 'cdashmm' ) . '" /></p>
+			<div id="print-invoice">
+				<div class="invoice-header">
+					<div class="invoice-header-contact">
+						<div class="invoice-from">
+							<h4>From: </h4>
+							' . do_shortcode( wpautop( $options['invoice_from'] ) ) . '
+						</div>
+						<div class="invoice-to">
+							<h4>To: </h4>
+							' . $business_billing . '
+						</div>
 					</div>
-					<div class="invoice-to">
-						<h4>To: </h4>
-						' . $business_billing . '
+					<div class="invoice-header-details">
+						<ul>
+							<li><strong>' . __( 'Invoice #: ', 'cdashmm' ) . '</strong><span class="invoice-number"> ' . $invoice_meta['invoice_number'] . '</span></li>
+							<li><strong>' . __( 'Issue Date: ', 'cdashmm' ) . '</strong><span class="issue-date"> ' . get_the_time( 'Y-m-d' ) . '</span></li>
+							<li><strong>' . __( 'Due Date: ', 'cdashmm' ) . '</strong><span class="due-date"> ' . $duedate . '</span></li>
+							<li><strong>' . __( 'Status: ', 'cdashmm' ) . '</strong><span class="status"> ' . $this_status . '</span></li>
+						</ul>
 					</div>
 				</div>
-				<div class="invoice-header-details">
-					<ul>
-						<li><strong>' . __( 'Invoice #: ', 'cdashmm' ) . '</strong><span class="invoice-number"> ' . $invoice_meta['invoice_number'] . '</span></li>
-						<li><strong>' . __( 'Issue Date: ', 'cdashmm' ) . '</strong><span class="issue-date"> ' . get_the_time( 'Y-m-d' ) . '</span></li>
-						<li><strong>' . __( 'Due Date: ', 'cdashmm' ) . '</strong><span class="due-date"> ' . $duedate . '</span></li>
-						<li><strong>' . __( 'Status: ', 'cdashmm' ) . '</strong><span class="status"> ' . $this_status . '</span></li>
-					</ul>
-				</div>
-			</div>
-			<div class="invoice-description">'
-				. $content .
-			'</div>
-			<table class="invoice-details">
-				<tr>
-					<th>Item</th>
-					<th>Amount</th>
-				</tr>';
-				if( isset( $invoice_meta['item_membershiplevel'] ) && isset( $invoice_meta['item_membershipamt'] ) ) {
-					$level = get_term_by( 'id', $invoice_meta['item_membershiplevel'], 'membership_level' );
-					$invoice_content .=
-					'<tr>
-						<td>' . __( 'Membership: ', 'cdashmm' ) . $level->name . '</td>
-						<td>' . cdashmm_display_price( $invoice_meta['item_membershipamt'] ) . '</td>
+				<div class="invoice-description">'
+					. $content .
+				'</div>
+				<table class="invoice-details">
+					<tr>
+						<th>Item</th>
+						<th>Amount</th>
 					</tr>';
-				}
-				if( isset( $invoice_meta['items'] ) ) {
-					$items = $invoice_meta['items'];
-					foreach( $items as $item ) {
+					if( isset( $invoice_meta['item_membershiplevel'] ) && isset( $invoice_meta['item_membershipamt'] ) ) {
+						$level = get_term_by( 'id', $invoice_meta['item_membershiplevel'], 'membership_level' );
 						$invoice_content .=
 						'<tr>
-							<td>' . $item['item_name'] . '</td>
-							<td>' . cdashmm_display_price( $item['item_amount'] ) . '</td>
+							<td>' . __( 'Membership: ', 'cdashmm' ) . $level->name . '</td>
+							<td>' . cdashmm_display_price( $invoice_meta['item_membershipamt'] ) . '</td>
 						</tr>';
 					}
-				}
-				if( isset( $invoice_meta['item_donation'] ) ) {
+					if( isset( $invoice_meta['items'] ) ) {
+						$items = $invoice_meta['items'];
+						foreach( $items as $item ) {
+							$invoice_content .=
+							'<tr>
+								<td>' . $item['item_name'] . '</td>
+								<td>' . cdashmm_display_price( $item['item_amount'] ) . '</td>
+							</tr>';
+						}
+					}
+					if( isset( $invoice_meta['item_donation'] ) ) {
+						$invoice_content .=
+						'<tr>
+							<td>' . __( 'Donation', 'cdashmm' ) . '</td>
+							<td>' . cdashmm_display_price( $invoice_meta['item_donation'] ) . '</td>
+						</tr>';
+					}
 					$invoice_content .=
-					'<tr>
-						<td>' . __( 'Donation', 'cdashmm' ) . '</td>
-						<td>' . cdashmm_display_price( $invoice_meta['item_donation'] ) . '</td>
-					</tr>';
-				}
-				$invoice_content .=
-				'<tr class="total">
-					<td><strong>' . __( 'Total', 'cdashmm') . '</strong></td>
-					<td><strong>' . cdashmm_display_price( $invoice_meta['amount'] ) . '</strong></td>
-				</tr>
-			</table>
-			<div class="invoice-footer">
-				' . do_shortcode( wpautop( $options['invoice_footer'] ) ) . '
-			</div>';
+					'<tr class="total">
+						<td><strong>' . __( 'Total', 'cdashmm') . '</strong></td>
+						<td><strong>' . cdashmm_display_price( $invoice_meta['amount'] ) . '</strong></td>
+					</tr>
+				</table>
+				<div class="invoice-footer">
+					' . do_shortcode( wpautop( $options['invoice_footer'] ) ) . '
+				</div>
+			</div><!-- #print-invoice -->';
 
 			// the invoice hasn't been paid, so we'll include a payment button
 			if( 'Paid' !== $this_status ) {
@@ -641,12 +709,13 @@ function cdashmm_single_invoice( $content ) {
 						<input type="hidden" name="custom" id="invoice_id" value="' . $invoice_meta['invoice_number'] . '">
 						<input type="hidden" name="cbt" value="Return to ' . $options['orgname'] . '">
 						<input type="hidden" name="notify_url" value="' . home_url() . '/?cdash-member-manager=paypal-ipn">
-						<p><input type="submit" value="' . __( 'Pay Now', 'cdashmm' ) . '"></p>
+						<p><input type="submit" value="' . __( 'Pay Now With PayPal', 'cdashmm' ) . '"></p>
 					</form>
 				</div>';
 			}
 		$invoice_content .=
-		'</div>';
+		'<p><input type="button" onclick="printDiv(\'print-invoice\')" value="' . __( 'Print Invoice', 'cdashmm' ) . '" /></p>
+		</div>';
 
 		$content = $invoice_content;
 	} 

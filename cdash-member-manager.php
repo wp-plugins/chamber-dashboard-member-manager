@@ -3,7 +3,7 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.5.3
+Version: 1.6
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 */
@@ -225,6 +225,15 @@ function cdashmm_register_tax_invoice_status() {
         array(
             'description'=> 'Invoice is overdue',
             'slug' => 'overdue',
+        )
+    );
+
+    wp_insert_term(
+        'Open', // the term 
+        'invoice_status', // the taxonomy
+        array(
+            'description'=> 'Invoice is open',
+            'slug' => 'open',
         )
     );
 

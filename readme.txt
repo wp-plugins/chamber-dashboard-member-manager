@@ -77,6 +77,10 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.6 =
+* added option to membership form to pay with check instead of PayPal
+* added "print" button to single invoice view that prints just the invoice
+
 = 1.5.3 =
 * improved membership form validation
 

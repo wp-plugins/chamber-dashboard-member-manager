@@ -25,6 +25,7 @@ function cdashmm_add_defaults() {
 					"receipt_message" => "We appreciate your support!  Payment details are below.",
 					"receipt_from_name" => get_bloginfo( 'name' ),
 					"receipt_from_email" => get_bloginfo( 'admin_email' ),
+					"check_message" => "We look forward to receiving your payment!",
 					"admin_email" => get_bloginfo( 'admin_email' ),
 					"suggested_donation" => '0',
 
@@ -129,6 +130,14 @@ function cdashmm_render_form() {
 					</tr>
 
 					<tr>
+						<th scope="row"><?php _e('Pay By Check Email Message', 'cdashmm'); ?></th>
+						<td>
+							<textarea name="cdashmm_options[check_message]" rows="7" cols="50" type='textarea'><?php echo $options['check_message']; ?></textarea><br />
+							<span style="color:#666666;margin-left:2px;"><?php _e('Body of email to be sent when a member agrees to pay by check.  This message will be followed by a link to the invoice.', 'cdashmm'); ?></span>
+						</td>
+					</tr>
+
+					<tr>
 						<th scope="row"><?php _e('Admin Notification Email', 'cdashmm'); ?></th>
 						<td>
 							<input type="email" size="35" name="cdashmm_options[admin_email]" value="<?php if(isset($options['admin_email'])) { echo $options['admin_email']; } ?>" />
@@ -197,6 +206,7 @@ function cdashmm_validate_options($input) {
 	$input['orgname'] =  wp_filter_nohtml_kses($input['orgname']); 
 	$input['receipt_subject'] =  wp_filter_nohtml_kses($input['receipt_subject']); 
 	$input['receipt_message'] =  wp_filter_nohtml_kses($input['receipt_message']);
+	$input['check_message'] =  wp_filter_nohtml_kses($input['check_message']);
 	$input['receipt_from_name'] =  wp_filter_nohtml_kses($input['receipt_from_name']);
 	$input['receipt_from_email'] =  wp_filter_nohtml_kses($input['receipt_from_email']);
 	$input['admin_email'] =  wp_filter_nohtml_kses($input['admin_email']);

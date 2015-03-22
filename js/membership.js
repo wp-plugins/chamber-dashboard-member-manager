@@ -71,10 +71,12 @@ jQuery(document).ready(function ($) {
 // when user hits the submit button on the become a member page, create/update the business and create the invoice
     $('#membership_form').on('submit', function (e) {
         if($("#membership_form")[0].checkValidity()) {
+            $("#membership_form").addClass("loading");
 
             console.log("valid");
 
             var url = membershipformajax.ajaxurl;
+            var method = $("input[name=method]:checked").val()
             var business_id = $('#business_id').val();
             var name = $('#name').val();
             var address = $('#address').val();
@@ -91,6 +93,7 @@ jQuery(document).ready(function ($) {
             var nonce = $('#cdashmm_membership_nonce').val();
             var data = {
                 'action': 'cdashmm_process_membership_form',
+                'method': method,
                 'business_id': business_id,
                 'name': name,
                 'address': address,
@@ -107,9 +110,18 @@ jQuery(document).ready(function ($) {
                 'nonce': nonce
             };
 
-            $.post(url, data, function (response) {
-                $("#invoice_id").val(response);
-            });
+            if(method == "check"){
+                e.preventDefault();
+                $.post(url, data, function (response) {
+                    window.location = response;
+                });
+            }else{
+                $.post(url, data, function (response) {
+                    $("#invoice_id").val(response);
+                });
+            }
+
+            
             
         }else console.log("invalid form");
         
