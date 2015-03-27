@@ -77,6 +77,11 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.7 =
+* fixed bug where incorrect business would get inserted into membership form
+* fixed bug so that invoices connected to draft businesses displayed properly
+* added optional parameter to membership form to limit membership level
+
 = 1.6 =
 * added option to membership form to pay with check instead of PayPal
 * added "print" button to single invoice view that prints just the invoice

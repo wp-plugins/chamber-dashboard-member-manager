@@ -3,7 +3,7 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.6
+Version: 1.7
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 */
@@ -325,6 +325,7 @@ if( defined( 'CDASH_PATH' ) ) {
             'to' => 'business',
             'cardinality' => 'many-to-one',
             'admin_column' => 'from',
+            'to_query_vars' => array('post_status' => 'any')
         ) );
     }
     add_action( 'p2p_init', 'cdashmm_businesses_and_invoices' );

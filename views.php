@@ -72,78 +72,107 @@ function cdashmm_membership_signup_form() {
 	if( !isset( $currency ) ) {
 		$member_form .= __( 'You have not entered in your currency settings.  In your WordPress dashboard, go to the Chamber Dashboard settings page to select what currency you accept.', 'cdashmm' );
 	} else {
-		$member_form .= '<form id="membership_form" action="https://www.paypal.com/cgi-bin/webscr" method="post">';
-		// Business Name
-		$member_form .= '<p class="explain">' . __( '* = Required') . '</p>';
-		$member_form .= '<p><label>' . __( 'Business Name *', 'cdashmm' ) . '</label>';
-		$member_form .= '<input name="name" type="text" id="name" required></p>';
-		$member_form .= '<div id="business-picker"></div>';
-		// Hidden field for business ID
-		$member_form .= '<input name="business_id" type="hidden" id="business_id" value="">';
-		// Billing Address
-		$member_form .= '<p><label>' . __( 'Billing Address *', 'cdashmm' ) . '</label>';
-		$member_form .= '<input name="address" type="text" id="address" required></p>';
-		// City
-		$member_form .= '<p><label>' . __( 'City *', 'cdashmm' ) . '</label>';
-		$member_form .= '<input name="city" type="text" id="city" required></p>';
-		// State
-		$member_form .= '<p><label>' . __( 'State *', 'cdashmm' ) . '</label>';
-		$member_form .= '<input name="state" type="text" id="state" required></p>';
-		// Zip
-		$member_form .= '<p><label>' . __( 'Zip *', 'cdashmm' ) . '</label>';
-		$member_form .= '<input name="zip" type="text" id="zip" required></p>';
-		// Email
-		$member_form .= '<p><label>' . __( 'Email *', 'cdashmm' ) . '</label>';
-		$member_form .= '<input name="email" type="email" id="email" required></p>';
-		// Phone
-		$member_form .= '<p><label>' . __( 'Phone Number *', 'cdashmm' ) . '</label>';
-		$member_form .= '<input name="phone" type="text" id="phone" required></p>';
-		// Membership Level
-		$member_form .= '<p><label>' . __( 'Membership Level *', 'cdashmm' ) . '</label>';
-		$member_form .= '<select name="level" id="level" required><option value=""></option>';
-			// get all the levels
-			$levels = get_terms( 'membership_level', 'hide_empty=0' );
-
-			foreach( $levels as $level ) {
-				$price = cdashmm_display_price( get_tax_meta( $level->term_id, 'cost' ) );
-				// display the membership level name and price
-				$member_form .= '<option value="' . $level->term_id . '">' . $level->name . ':&nbsp' . $price . '</option>';
-			}
-		$member_form .= '</select></p>';
-		// Hidden: subtotal
-		$member_form .= '<input name="subtotal" type="hidden" id="subtotal" value="0">';
-		// Donation
-		$member_form .= '<p><label>' . __( 'Optional Donation', 'cdashmm' ) . '</label>';
-		$member_form .= '<input name="donation" type="number" id="donation" value="' . $options['suggested_donation'] . '">';
-		if( isset( $options['donation_explanation'] ) ) {
-			$member_form .= '<br /><span class="donation_explanation">' . $options['donation_explanation'] . '</span>';
-		}
-		$member_form .= '</p>';
-		// Total
-		$member_form .= '<p class="total"><label>' . __( 'Total Due: ', 'cdashmm' ) . '</label>'; 
-		$member_form .= '<input name="total" id="total" value="0" disabled></p>';
-		$member_form .= '</label>';
-		$member_form .= '<p class="method"><label>' . __( 'Payment Method: ', 'cdashmm' ) . '</label>';
-		$member_form .= '<input name="method" type="radio" value="paypal" checked>&nbsp;' . __( 'PayPal', 'cdashmm' ) . '<br />';
-		$member_form .= '<input name="method" type="radio" value="check">&nbsp;' . __( 'Check', 'cdashmm' );
-		// Hidden: Nonce
-		$member_form .= '<input name="cdashmm_membership_nonce" id="cdashmm_membership_nonce" type="hidden" value="' . wp_create_nonce( 'cdashmm_membership_nonce' ) . '">';
-		// Hidden PayPal fields
-		$member_form .= '<input type="hidden" name="cmd" value="_cart">';
-		$member_form .= '<input type="hidden" name="upload" value="1" />';
-		$member_form .= '<input type="hidden" name="business" value="' . $options['paypal_email'] . '">';
-		$member_form .= '<input type="hidden" name="return" value="' . get_the_permalink() . '">';
-		$member_form .= '<input type="hidden" name="currency_code" value="' . $currency . '">';
-		$member_form .= '<input type="hidden" name="item_name_1" value="Membership">';
-		$member_form .= '<input type="hidden" name="amount_1" id="amount_1" value="">';
-		$member_form .= '<input type="hidden" name="item_name_2" value="Donation">';
-		$member_form .= '<input type="hidden" name="amount_2" id="amount_2" value="' . $options['suggested_donation'] . '">';
-		$member_form .= '<input type="hidden" name="rm" value="2">';
-		$member_form .= '<input type="hidden" name="custom" id="invoice_id" value="' . cdashmm_calculate_invoice_number() . '">';
-		$member_form .= '<input type="hidden" name="cbt" value="Return to ' . $options['orgname'] . '">';
-		$member_form .= '<input type="hidden" name="notify_url" value="' . home_url() . '/?cdash-member-manager=paypal-ipn">';
-		$member_form .= '<p><input type="submit" value="' . __( 'Pay Now', 'cdashmm' ) . '"></p>';
-		$member_form .= '</form>';
+		$member_form .= 
+		'<form id="membership_form" action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<p class="explain">' . __( '* = Required') . '</p>
+			<p>
+				<label>' . __( 'Business Name *', 'cdashmm' ) . '</label>
+				<input name="name" type="text" id="name" required>
+			</p>
+			<div id="business-picker"></div>
+			<input name="business_id" type="hidden" id="business_id" value="">
+			<p>
+				<label>' . __( 'Billing Address *', 'cdashmm' ) . '</label>
+				<input name="address" type="text" id="address" required>
+			</p>
+			<p>
+				<label>' . __( 'City *', 'cdashmm' ) . '</label>
+				<input name="city" type="text" id="city" required>
+			</p>
+			<p>
+				<label>' . __( 'State *', 'cdashmm' ) . '</label>
+				<input name="state" type="text" id="state" required>
+			</p>
+			<p>
+				<label>' . __( 'Zip *', 'cdashmm' ) . '</label>
+				<input name="zip" type="text" id="zip" required>
+			</p>
+			<p>
+				<label>' . __( 'Email *', 'cdashmm' ) . '</label>
+				<input name="email" type="email" id="email" required>
+			</p>
+			<p>
+				<label>' . __( 'Phone Number *', 'cdashmm' ) . '</label>
+				<input name="phone" type="text" id="phone" required>
+			</p>
+			<p>
+				<label>' . __( 'Membership Level *', 'cdashmm' ) . '</label>';
+				$levels = get_terms( 'membership_level', 'hide_empty=0' );
+				$predetermined_level = false;
+				if( isset( $_GET['membership_level'] ) ) {
+					// we have a membership level parameter, so first let's make sure it matches an existing membership level
+					$level_slugs = array();
+					foreach( $levels as $level ) {
+						$level_slugs[] = $level->slug;
+					}
+					if( in_array( $_GET['membership_level'], $level_slugs ) ) {
+						$predetermined_level = true;
+					}
+				}
+				if( true == $predetermined_level ) {
+					$this_level = get_term_by( 'slug', $_GET['membership_level'], 'membership_level' );
+					$price = cdashmm_display_price( get_tax_meta( $this_level->term_id, 'cost' ) );
+					$member_form .= '<input name="level" type="text" id="level" disabled value="' . $this_level->name . ' - ' . $price . '">';
+					$starting_price = get_tax_meta( $this_level->term_id, 'cost' );
+				} else {
+					$member_form .= '<select name="level" id="level" required>
+						<option value=""></option>';
+						// get all the levels
+						foreach( $levels as $level ) {
+							$price = cdashmm_display_price( get_tax_meta( $level->term_id, 'cost' ) );
+							// display the membership level name and price
+							$member_form .= '<option value="' . $level->term_id . '">' . $level->name . ':&nbsp' . $price . '</option>';
+						}
+					$member_form .= '</select>';
+					$starting_price = 0;
+				}
+			$member_form .= '</p>
+			<input name="subtotal" type="hidden" id="subtotal" value="' . $starting_price . '">
+			<p>
+				<label>' . __( 'Optional Donation', 'cdashmm' ) . '</label>
+				<input name="donation" type="number" id="donation" value="' . $options['suggested_donation'] . '">';
+				$starting_price += $options['suggested_donation'];
+				if( isset( $options['donation_explanation'] ) ) {
+					$member_form .= '<br /><span class="donation_explanation">' . $options['donation_explanation'] . '</span>';
+				}
+			$member_form .= '</p>
+			<p class="total">
+				<label>' . __( 'Total Due: ', 'cdashmm' ) . '</label>
+				<input name="total" id="total" value="' . $starting_price . '" disabled>
+			</p>
+			<p class="method">
+				<label>' . __( 'Payment Method: ', 'cdashmm' ) . '</label>
+				<input name="method" type="radio" value="paypal" checked>&nbsp;' . __( 'PayPal', 'cdashmm' ) . '<br />
+				<input name="method" type="radio" value="check">&nbsp;' . __( 'Check', 'cdashmm' ) . '
+			</p>
+			<input name="cdashmm_membership_nonce" id="cdashmm_membership_nonce" type="hidden" value="' . wp_create_nonce( 'cdashmm_membership_nonce' ) . '">
+			<input type="hidden" name="cmd" value="_cart">
+			<input type="hidden" name="upload" value="1" />
+			<input type="hidden" name="business" value="' . $options['paypal_email'] . '">
+			<input type="hidden" name="return" value="' . get_the_permalink() . '">
+			<input type="hidden" name="currency_code" value="' . $currency . '">
+			<input type="hidden" name="item_name_1" value="Membership">
+			<input type="hidden" name="amount_1" id="amount_1" value="">
+			<input type="hidden" name="item_name_2" value="Donation">
+			<input type="hidden" name="amount_2" id="amount_2" value="' . $options['suggested_donation'] . '">
+			<input type="hidden" name="rm" value="2">
+			<input type="hidden" name="custom" id="invoice_id" value="' . cdashmm_calculate_invoice_number() . '">
+			<input type="hidden" name="cbt" value="Return to ' . $options['orgname'] . '">
+			<input type="hidden" name="notify_url" value="' . home_url() . '/?cdash-member-manager=paypal-ipn">
+			<p>
+				<input type="submit" value="' . __( 'Pay Now', 'cdashmm' ) . '">
+			</p>
+		</form>';
 	}
 
 	return $member_form;
@@ -217,6 +246,9 @@ function cdashmm_prefill_membership_form() {
     }
  
     $business_id = $_POST['business_id'];
+    if( "new" == $_POST['business_id'] ) {
+    	die();
+    }
     $results = array();
 
     $args = array( 
@@ -554,6 +586,8 @@ function cdashmm_single_invoice( $content ) {
         );
         
         $thisbusiness = new WP_Query( $args );
+        $msg = "<pre>" . print_r($thisbusiness, true) . "</pre>";
+        // wp_die($msg);
 
         if ( $thisbusiness->have_posts() ) {
             while ( $thisbusiness->have_posts() ) : $thisbusiness->the_post();
