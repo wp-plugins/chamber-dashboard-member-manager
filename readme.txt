@@ -1,5 +1,5 @@
 === Chamber Dashboard Member Manager ===
-Contributors: gwendydd
+Contributors: gwendydd, jpkay
 Tags: Chamber of Commerce, business directory, businesses, membership, membership fees
 Donate link: http://chamberdashboard.com/donate
 Requires at least: 3.8
@@ -77,6 +77,21 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.8 =
+* fixed PHP error in notification meta box
+* revamped settings page to use settings API better
+* added option to automatically lapse membership when membership dues are not paid
+* automatically mark invoices as "unpaid" after 4 months
+* other changes to work with new recurring payments plugin
+* added due date column to invoices overview page
+* made columns on invoices overview page sortable
+* further fixes to PayPal IPN that should prevent multiple notifications from being sent
+* improvements to Payment Report
+* fixed bug that caused invoice number to increment if you use Quick Edit
+* fixed bug that caused paid invoices to be marked as overdue
+* added ability to download CSV of recent payments
+* invoices default to invoice status "open" if no other invoice status is selected
+
 = 1.7 =
 * fixed bug where incorrect business would get inserted into membership form
 * fixed bug so that invoices connected to draft businesses displayed properly
