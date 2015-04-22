@@ -7,28 +7,30 @@ function cdashmm_add_payment_reports_page() {
 }
 add_action('admin_menu', 'cdashmm_add_payment_reports_page');
 
+
 function cdashmm_generate_payment_report() { ?>
 
-		<h2><?php _e('Payment Report', 'cdashmm'); ?></h2>
+		<h2><?php _e( 'Payment Report', 'cdashmm' ); ?></h2>
 	
-		<form method='post' action='<?php echo admin_url( 'edit.php?post_type=invoice&page=payment-report'); ?>' id='payroll-report'>
+		<form method='post' action='<?php echo admin_url( 'edit.php?post_type=invoice&page=payment-report'); ?>' id='payment-report'>
 			<table class="form-table">
 				<tr>
-					<th scope="row"><?php _e('Select Date Range:', 'cdashmm'); ?></th>
+					<th scope="row"><?php _e( 'Select Date Range:', 'cdashmm' ); ?></th>
 					<td>
 						From <input type="text" size="10" name="start_date" id="start_date" value="" required /> to <input type="text" size="10" name="end_date" id="end_date" value="" required />
 					</td>					
 				</tr>
 			</table>
 			<p class="submit">
-			<input type="submit" class="button-primary" value="<?php _e('Generate Report') ?>" />
+			<input type="hidden" name="view" value="view">
+			<input type="submit" class="button-primary" value="<?php _e( 'Generate Report', 'cdashmm' ); ?>" />
 			</p>
 		</form>
 
-		<?php if($_POST) { 
-			if( ($_POST['start_date'] == '') || ($_POST['end_date'] == '')) {
+		<?php if( $_POST ) { 
+			if( ( $_POST['start_date'] == '' ) || ( $_POST['end_date'] == '' ) ) {
 				_e('You must enter both a start date and an end date to create a report.', 'cdashmm');
-			} elseif($_POST['start_date'] > $_POST['end_date']) {
+			} elseif( $_POST['start_date'] > $_POST['end_date'] ) {
 				_e('The report end date must be after the report begin date.', 'cdashmm');
 			} else {
 				// find the payments and generate the report
@@ -55,24 +57,28 @@ function cdashmm_generate_payment_report() { ?>
 					);
 				
 				$invoice_query = new WP_Query( $args );
+
+				$total = 0;
 				
 				// The Loop
 				if ( $invoice_query->have_posts() ) : ?>
+					<form method='post' action='<?php echo admin_url( 'edit.php?post_type=invoice&page=payment-report'); ?>' id='payment-report'>
+						<input type="hidden" name="start_date" id="start_date" value="<?php echo $_POST['start_date']; ?>" />
+						<input type="hidden" name="end_date" id="end_date" value="<?php echo $_POST['end_date']; ?>"  />
+						<input type="hidden" name="cdashmm_download_payment_report" value="cdashmm_download_payment_report">
+						<p>
+							<input type="submit" class="button-primary" value="<?php _e( 'Download This Report', 'cdashmm' ) ?>" />
+						</p>
+					</form>
+
 					<table id="payment-report" class="wp-list-table widefat fixed">
 						<thead>
 							<tr>
-								<th class="manage-column">
-									<?php _e( 'Date', 'cdashmm' ); ?>
-								</th>
-								<th class="manage-column">
-									<?php _e( 'Amount', 'cdashmm' ); ?>
-								</th>
-								<th class="manage-column">
-									<?php _e( 'Business', 'cdashmm' ); ?>
-								</th>
-								<th class="manage-column">
-									<?php _e( 'Invoice ID', 'cdashmm' ); ?>
-								</th>
+								<th><?php _e( 'Date Paid', 'cdashrp' ); ?></th>
+								<th><?php _e( 'Title', 'cdashrp' ); ?></th>
+								<th><?php _e( 'Business', 'cdashrp' ); ?></th>
+								<th><?php _e( 'Invoice #', 'cdashrp' ); ?></th>
+								<th><?php _e( 'Amount', 'cdashrp' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -83,8 +89,10 @@ function cdashmm_generate_payment_report() { ?>
 	        					if( isset( $invoice_meta['paiddate'] ) )
 	        						$date = $invoice_meta['paiddate'];
 	        					$amount = '';
-	        					if( isset( $invoice_meta['amount'] ) ) 
+	        					if( isset( $invoice_meta['amount'] ) ) {
+	        						$total += $invoice_meta['amount'];
 	        						$amount = cdashmm_display_price( $invoice_meta['amount'] );
+	        					}
 	        					$thisbusiness = get_posts( array(
 								  'connected_type' => 'invoices_to_businesses',
 								  'connected_items' => get_the_id(),
@@ -92,31 +100,186 @@ function cdashmm_generate_payment_report() { ?>
 								  'suppress_filters' => false
 								) );
 								foreach( $thisbusiness as $thisone ) {
-									$business = '<a href="' . get_edit_post_link( $thisone->ID ) . '">' . $thisone->post_title . '</a>';
+									$business = $thisone->post_title . '<br />';
+									$business .= '<a href="' . get_edit_post_link( $thisone->ID ) . '">' . __( 'Edit', 'cdashmm' ) . '</a> |';
+									$business .= '<a href="' . get_permalink( $thisone->ID ) . '"?>' . __( 'View', 'cdashrp' ) . '</a>';
 								}
 	        					$invoice_number = '';
 	        					if( isset( $invoice_meta['invoice_number'] ) )
 	        						$invoice_number = '<a href="' . get_edit_post_link( get_the_id() ) . '">' . $invoice_meta['invoice_number'] . '</a>';
 								?>
 								<tr class="alternate">
-									<td><?php echo $date; ?></td>
-									<td><?php echo $amount; ?></td>
-									<td><?php echo $business; ?></td>
-									<td><?php echo $invoice_number; ?></td>
+									<td>
+										<?php echo $date; ?>
+									</td>
+									<td>
+										<?php the_title(); ?><br />
+										<a href="<?php echo get_edit_post_link(); ?>"><?php _e( 'Edit', 'cdashrp' ); ?></a> |
+										<a href="<?php the_permalink(); ?>"?><?php _e( 'View', 'cdashrp' ); ?></a>
+									</td>
+									<td>
+										<?php echo $business; ?>
+									</td>
+									<td>
+										<?php echo $invoice_number; ?>
+									</td>
+									<td>
+										<?php echo $amount; ?>
+									</td>
 								</tr>
 							<?php endwhile; ?>
 						</tbody>
+						<tfoot>
+							<tr>
+								<th></th>
+								<th></th>
+								<th></th>
+								<th></th>
+								<th><?php _e( 'Total: ', 'cdashrp' ); ?> <?php echo cdashmm_display_price( $total ); ?></th>
+							</tr>
+						</tfoot>
 					</table>
+
+					<form method='post' action='<?php echo admin_url( 'edit.php?post_type=invoice&page=payment-report'); ?>' id='payment-report'>
+						<input type="hidden" name="start_date" id="start_date" value="<?php echo $_POST['start_date']; ?>" />
+						<input type="hidden" name="end_date" id="end_date" value="<?php echo $_POST['end_date']; ?>"  />
+						<input type="hidden" name="cdashmm_download_payment_report" value="cdashmm_download_payment_report">
+						<p>
+							<input type="submit" class="button-primary" value="<?php _e( 'Download This Report', 'cdashmm' ) ?>" />
+						</p>
+					</form>
 				<?php endif;
 				
 				// Reset Post Data
-				wp_reset_postdata(); ?>
+				wp_reset_postdata();
 			
 
-			<?php } 
-		}?>
+			} 
+		} 
 
-<?php }
+}
+
+add_action('admin_init','cdashmm_download_payment_report_csv');
+
+function cdashmm_download_payment_report_csv() {
+	if ( isset( $_POST['cdashmm_download_payment_report'] ) ) {
+		// set up the file
+			header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+			header('Content-Description: File Transfer');
+			header("Content-type: text/csv");
+			header("Content-Disposition: attachment; filename=chamber-dashboard-payment-report.csv");
+			header("Expires: 0");
+			header("Pragma: public");
+
+			//open the file 
+			$fh = @fopen( 'php://output', 'w' );
+
+			// create the header row
+			$header = array(
+				__( 'Date Paid', 'cdashmm' ),
+				__( 'Invoice #', 'cdashmm' ),
+				__( 'Amount', 'cdashmm' ),
+				__( 'Business', 'cdashmm' ),
+				__( 'View Invoice', 'cdashmm' ),
+				__( 'Edit Invoice', 'cdashmm' ),
+				__( 'View Business', 'cdashmm' ),
+				__( 'Edit Business', 'cdashmm' )
+			);
+
+			// Add the headers to the CSV			
+			fputcsv($fh, $header);
+
+			// find the payments and generate the report
+				$args = array( 
+				    'post_type' => 'invoice',
+				    'posts_per_page' => -1, 
+				    'invoice_status' => 'paid',
+				    'meta_query' => array(
+				    	//'relation' => 'AND',
+						array(
+							'key'     => '_cdashmm_paiddate',
+							'value'   => $_POST['start_date'],
+							'compare' => '>=',
+						),
+						array(
+							'key'     => '_cdashmm_paiddate',
+							'value'   => $_POST['end_date'],
+							'compare' => '<=',
+						),
+					),
+					'meta_key' => '_cdashmm_paiddate',
+					'orderby' => 'meta_value',
+					'order' => 'ASC',
+					);
+				
+				$invoice_query = new WP_Query( $args );
+
+				// The Loop
+				if ( $invoice_query->have_posts() ) : 
+					while ( $invoice_query->have_posts() ) : $invoice_query->the_post(); 
+						$fields = array();
+						global $invoice_metabox;
+    					$invoice_meta = $invoice_metabox->the_meta();
+
+    					// Date
+    					if( isset( $invoice_meta['paiddate'] ) ) {
+    						$fields[] = $invoice_meta['paiddate'];
+    					} else {
+    						$fields[] = ' ';
+    					}
+
+    					// Invoice Number
+    					if( isset( $invoice_meta['invoice_number'] ) ) {
+    						$fields[] = $invoice_meta['invoice_number'];
+						} else {
+							$fields[] = ' ';
+						}
+
+						// Amount
+						if( isset( $invoice_meta['amount'] ) ) {
+    						$fields[] = cdashmm_display_price( $invoice_meta['amount'] );
+    					} else {
+    						$fields[] = ' ';
+    					}
+
+    					// Business Name
+						$thisbusiness = get_posts( array(
+						  'connected_type' => 'invoices_to_businesses',
+						  'connected_items' => get_the_id(),
+						  'nopaging' => true,
+						  'suppress_filters' => false
+						) );
+						foreach( $thisbusiness as $thisone ) {
+							$fields[] = $thisone->post_title . '<br />';
+							$edit_business = get_edit_post_link( $thisone->ID );
+							$view_business = get_permalink( $thisone->ID );
+						}
+
+						// View Invoice
+						$fields[] = get_permalink();
+
+						// Edit Invoice
+						$fields[] = get_edit_post_link();
+
+						// View Business
+						$fields[] = $view_business;
+
+						// Edit Business
+						$fields[] = $edit_business;
+
+						// Add the row to the CSV
+						fputcsv($fh, $fields);
+					endwhile;
+				endif;
+				
+				// Reset Post Data
+				wp_reset_postdata();
+
+			// Close the file stream
+			fclose($fh);
+			exit;
+	}
+}
 
 
 ?>
