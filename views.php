@@ -78,37 +78,37 @@ function cdashmm_membership_signup_form() {
 			<p class="explain">' . __( '* = Required') . '</p>
 			<input name="cdashmm_membership_nonce" id="cdashmm_membership_nonce" type="hidden" value="' . wp_create_nonce( 'cdashmm_membership_nonce' ) . '">
 			<p>
-				<label>' . __( 'Business Name *', 'cdashmm' ) . '</label>
+				<label>' . __( 'Business Name', 'cdashmm' ) . ' *</label>
 				<input name="name" type="text" id="name" required>
 			</p>
 			<div id="business-picker"></div>
 			<input name="business_id" type="hidden" id="business_id" value="">
 			<p>
-				<label>' . __( 'Billing Address *', 'cdashmm' ) . '</label>
+				<label>' . __( 'Billing Address', 'cdashmm' ) . ' *</label>
 				<input name="address" type="text" id="address" required>
 			</p>
 			<p>
-				<label>' . __( 'City *', 'cdashmm' ) . '</label>
+				<label>' . __( 'City', 'cdashmm' ) . ' *</label>
 				<input name="city" type="text" id="city" required>
 			</p>
 			<p>
-				<label>' . __( 'State *', 'cdashmm' ) . '</label>
+				<label>' . __( 'State/Province', 'cdashmm' ) . ' *</label>
 				<input name="state" type="text" id="state" required>
 			</p>
 			<p>
-				<label>' . __( 'Zip *', 'cdashmm' ) . '</label>
+				<label>' . __( 'Zip/Postal Code', 'cdashmm' ) . ' *</label>
 				<input name="zip" type="text" id="zip" required>
 			</p>
 			<p>
-				<label>' . __( 'Email *', 'cdashmm' ) . '</label>
+				<label>' . __( 'Email', 'cdashmm' ) . ' *</label>
 				<input name="email" type="email" id="email" required>
 			</p>
 			<p>
-				<label>' . __( 'Phone Number *', 'cdashmm' ) . '</label>
+				<label>' . __( 'Phone Number', 'cdashmm' ) . ' *</label>
 				<input name="phone" type="text" id="phone" required>
 			</p>
 			<p>
-				<label>' . __( 'Membership Level *', 'cdashmm' ) . '</label>';
+				<label>' . __( 'Membership Level', 'cdashmm' ) . ' *</label>';
 				$levels = get_terms( 'membership_level', 'hide_empty=0' );
 				$predetermined_level = false;
 				if( isset( $_GET['membership_level'] ) ) {

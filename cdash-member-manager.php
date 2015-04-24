@@ -3,9 +3,10 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.8
+Version: 1.8.1
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
+Text Domain: cdashmm
 */
 
 /*  Copyright 2014 Morgan Kay and the Fremont Chamber of Commerce (email : info@chamberdashboard.com)
