@@ -68,7 +68,7 @@ function cdashmm_options_init(  ) {
 		'cdashmm_plugin_options', 
 		'cdashmm_main_section',
 		array( 
-			__( 'Email address associated with your PayPal account.  Payments will be sent to this email address.', 'cdashmm')  
+			__( 'Email address associated with your PayPal account.  Payments will be sent to this email address.  If you leave this blank, users will not have an option to pay by PayPal.', 'cdashmm')  
 		)
 	);
 

@@ -64,6 +64,10 @@ function cdashmm_membership_signup_form() {
     wp_localize_script( 'membership-form', 'membershipformajax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
 
     $options = get_option( 'cdashmm_options' );
+    $paypal = true;
+    if( !isset( $options['paypal_email'] ) || '' == $options['paypal_email'] ) {
+    	$paypal = false;
+    }
     $cdash_options = get_option( 'cdash_directory_options' );
     $currency = $cdash_options['currency'];
 	$member_form = '';
@@ -151,13 +155,20 @@ function cdashmm_membership_signup_form() {
 			<p class="total">
 				<label>' . __( 'Total Due: ', 'cdashmm' ) . '</label>
 				<input name="total" id="total" class="total" value="' . $starting_price . '" disabled>
-			</p>
-			<p class="method">
-				<label>' . __( 'Payment Method: ', 'cdashmm' ) . '</label>
-				<input name="method" type="radio" value="paypal" id="pay_paypal" class="method" checked>&nbsp;' . __( 'PayPal', 'cdashmm' ) . '<br />
-				<input name="method" type="radio" value="check" id="pay_check" class="method">&nbsp;' . __( 'Check', 'cdashmm' ) . '
 			</p>';
-			do_action( 'cdashmm_recurring_payments_fields', $member_form ); 
+			if( true == $paypal ) {
+				$member_form .= '<p class="method">
+					<label>' . __( 'Payment Method: ', 'cdashmm' ) . '</label>
+					<input name="method" type="radio" value="paypal" id="pay_paypal" class="method" checked>&nbsp;' . __( 'PayPal', 'cdashmm' ) . '<br />
+					<input name="method" type="radio" value="check" id="pay_check" class="method">&nbsp;' . __( 'Check', 'cdashmm' ) . '
+				</p>';
+				do_action( 'cdashmm_recurring_payments_fields', $member_form ); 
+			} else {
+				$member_form .= '<p class="method" style="display: none;">
+					<label>' . __( 'Payment Method: ', 'cdashmm' ) . '</label>
+					<input name="method" type="radio" value="check" id="pay_check" class="method" checked>&nbsp;' . __( 'Check', 'cdashmm' ) . '
+				</p>';
+			}
 			do_action( 'cdashmm_paypal_hidden_fields', $member_form );
 			$member_form .=
 			'
@@ -595,6 +606,10 @@ function cdashmm_single_invoice( $content ) {
 	if( is_singular('invoice') ) {
 		// get options
 		$options = get_option( 'cdashmm_options' );
+	    $paypal = true;
+	    if( !isset( $options['paypal_email'] ) || '' == $options['paypal_email'] ) {
+	    	$paypal = false;
+	    }
 		// get the business associated with this invoice
 		$invoice_id = get_the_id();
         $args = array( 
@@ -725,7 +740,7 @@ function cdashmm_single_invoice( $content ) {
 			</div><!-- #print-invoice -->';
 
 			// the invoice hasn't been paid, so we'll include a payment button
-			if( 'Paid' !== $this_status ) {
+			if( 'Paid' !== $this_status && true == $paypal ) {
 				$invoice_content .=
 				'<div class="payment-form">
 					<form id="invoice_form" action="https://www.paypal.com/cgi-bin/webscr" method="post">
