@@ -46,7 +46,7 @@
 		<label><?php _e( 'Send Copy To:', 'cdashmm' ); ?></label>
 			<input type="checkbox" name="copy_to[]" class="copy_to" value="<?php echo get_option( 'admin_email' ); ?>"><?php echo get_option( 'admin_email' ); ?><br />
 		<label><?php _e( 'Custom Message:', 'cdashmm' ); ?></label>
-			<textarea id="message" name="message" placeholder="<?php _e( 'Optional. This message will appear at the top of your email.', 'cdashmm' ); ?>"></textarea>
+			<textarea id="custom-message" name="message" placeholder="<?php _e( 'Optional. This message will appear at the top of your email.', 'cdashmm' ); ?>"></textarea>
 		
 		<input name="cdashmm_notification_nonce" id="cdashmm_notification_nonce" type="hidden" value="<?php echo wp_create_nonce( 'cdashmm_notification_nonce' ); ?>">
 		<input name="invoice_id" id="invoice_id" type="hidden" value="<?php echo $post->ID; ?>">

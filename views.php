@@ -146,7 +146,7 @@ function cdashmm_membership_signup_form() {
 			<input name="subtotal" type="hidden" id="subtotal" value="' . $starting_price . '">
 			<p>
 				<label>' . __( 'Optional Donation', 'cdashmm' ) . '</label>
-				<input name="donation" type="number" id="donation" value="' . $options['suggested_donation'] . '">';
+				<input name="donation" type="number" min="0" id="donation" value="' . $options['suggested_donation'] . '">';
 				$starting_price += $options['suggested_donation'];
 				if( isset( $options['donation_explanation'] ) ) {
 					$member_form .= '<br /><span class="donation_explanation">' . $options['donation_explanation'] . '</span>';
@@ -519,26 +519,25 @@ function cdashmm_process_membership_form() {
 		// send email receipt to business
 	    $receipt_to = $email;
 	    $receipt_subject = __( 'Invoice from ', 'cdashmm' ) . $options['orgname'];
-	    $receipt_message = $options['check_message'] . "\r\n\r\n";
-    	$receipt_message .= __( 'View the invoice: ', 'cdashmm' ) . get_the_permalink( $invoice ) . "\r\n";
-        $receipt_headers = "From: " . $options['receipt_from_name'] . "<" . $options['receipt_from_email'] . ">\r\n";
+	    $receipt_message = $options['check_message'];
+    	$receipt_message .= '<p><strong>' . __( 'View the invoice: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $invoice ) . '">' . get_the_permalink( $invoice ) . '</a></p>';
+        $receipt_from = "From: " . $options['receipt_from_name'] . "<" . $options['receipt_from_email'] . ">";
 
-        wp_mail( $receipt_to, $receipt_subject, $receipt_message, $receipt_headers );
+        cdashmm_send_email( $receipt_from, $receipt_to, '', $receipt_subject, $receipt_message );
 
         // send email to site admin 
         $admin_to = $options['admin_email'];
         $admin_subject = __( 'New Payment By Check', 'cdashmm' );
-        $admin_message = get_the_title( $business_id ) . __( ' has just filled out your membership form, and has agree to pay by check.', 'cdashmm' ) . "\r\n";
-        $admin_message .= __( 'Payment amount: ', 'cdashmm' ) . cdashmm_display_price( $total ) . "\r\n\r\n";
-        $admin_message .= __( 'View the invoice: ', 'cdashmm' ) . get_the_permalink( $invoice ) . "\r\n";
-
-        $admin_message .= __( 'View the business: ', 'cdashmm' ) . get_the_permalink( $business_id ) . "\r\n";
+        $admin_message = '<p>' . get_the_title( $business_id ) . __( ' has just filled out your membership form, and will pay by check.', 'cdashmm' ) . '</p>';
+        $admin_message .= '<p><strong>' . __( 'Payment amount: ', 'cdashmm' ) . '</strong>' . cdashmm_display_price( $total ) . '</p>';
+        $admin_message .= '<p><strong>' . __( 'View the invoice: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $invoice ) . '">' . get_the_permalink( $invoice ) . '</a></p>';
+        $admin_message .= '<p><strong>' . __( 'View the business: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $business_id ) . '">' . get_the_permalink( $business_id ) . '</a></p>';
         if( "draft" == get_post_status( $business_id ) ) {
-            $admin_message .= get_the_title( $business_id ) . __( 'is a new business, so you need to publish the new business before it will appear in your member directory.', 'cdashmm' );
+            $admin_message .= '<p>' . get_the_title( $business_id ) . __( 'is a new business, so you need to publish the new business before it will appear in your member directory.', 'cdashmm' ) . '</p>';
         }
-        $admin_headers = "From: Chamber Dashboard <" . $options['receipt_from_email'] . ">\r\n";
+        $admin_from = "Chamber Dashboard <" . $options['receipt_from_email'] . ">";
 
-        wp_mail( $admin_to, $admin_subject, $admin_message, $admin_headers );
+        cdashmm_send_email( $admin_from, $admin_to, '', $admin_subject, $admin_message );
     }
 
 	if( "paypal" == $_POST['method'] ) {

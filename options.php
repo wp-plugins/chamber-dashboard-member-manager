@@ -266,8 +266,11 @@ function cdashmm_receipt_message_render( $args ) {
 
 	$options = get_option( 'cdashmm_options' );
 	?>
-	<textarea cols='50' rows='7' name='cdashmm_options[receipt_message]'><?php echo $options['receipt_message']; ?></textarea>
- 	<br/ ><span class="description"><?php echo $args[0]; ?></span>
+ 	<span class="description"><?php echo $args[0]; ?></span><br />
+	<?php
+		$args = array("wpautop" => false, "media_buttons" => false, "textarea_name" => "cdashmm_options[receipt_message]", "textarea_rows" => "5");
+		wp_editor( $options['receipt_message'], "receipt", $args );
+	?>
 	<?php
 
 }
@@ -277,8 +280,11 @@ function cdashmm_check_message_render( $args ) {
 
 	$options = get_option( 'cdashmm_options' );
 	?>
-	<textarea cols='50' rows='7' name='cdashmm_options[check_message]'><?php echo $options['check_message']; ?></textarea>
- 	<br/ ><span class="description"><?php echo $args[0]; ?></span>
+ 	<span class="description"><?php echo $args[0]; ?></span><br />
+	<?php
+		$args = array("wpautop" => false, "media_buttons" => false, "textarea_name" => "cdashmm_options[check_message]", "textarea_rows" => "5");
+		wp_editor( $options['check_message'], "check", $args );
+	?>
 	<?php
 
 }
@@ -384,11 +390,11 @@ function cdashmm_validate_options( $input ) {
     }
 
     if( isset( $input['receipt_message'] ) ) {
-    	$input['receipt_message'] = strip_tags( stripslashes( $input['receipt_message'] ) );
+    	$input['receipt_message'] = wp_kses( $input['receipt_message'] );
     }
 
     if( isset( $input['check_message'] ) ) {
-    	$input['check_message'] = strip_tags( stripslashes( $input['check_message'] ) );
+    	$input['check_message'] = wp_kses( $input['check_message'] );
     }
 
     if( isset( $input['admin_email'] ) ) {
@@ -396,11 +402,11 @@ function cdashmm_validate_options( $input ) {
     }
 
     if( isset( $input['invoice_from'] ) ) {
-    	$input['invoice_from'] = strip_tags( stripslashes( $input['invoice_from'] ) );
+    	$input['invoice_from'] = wp_kses( $input['invoice_from'] );
     }
 
     if( isset( $input['invoice_footer'] ) ) {
-    	$input['invoice_footer'] = strip_tags( stripslashes( $input['invoice_footer'] ) );
+    	$input['invoice_footer'] = wp_kses( $input['invoice_footer'] );
     }
 
     if( isset( $input['suggested_donation'] ) ) {
@@ -420,7 +426,7 @@ function cdashmm_validate_options( $input ) {
     }
 
     if( isset( $input['invoice_message'] ) ) {
-    	$input['invoice_message'] = strip_tags( stripslashes( $input['invoice_message'] ) );
+    	$input['invoice_message'] = wp_kses( $input['invoice_message'] );
     }
 
     if( isset( $input['reminder_frequency'] ) ) {
@@ -432,7 +438,7 @@ function cdashmm_validate_options( $input ) {
     }
 
 	if( isset( $input['reminder_message'] ) ) {
-    	$input['reminder_message'] = strip_tags( stripslashes( $input['reminder_message'] ) );
+    	$input['reminder_message'] = wp_kses( $input['reminder_message'] );
     }
 
     if( isset( $input['recurring_payments_license'] ) ) {

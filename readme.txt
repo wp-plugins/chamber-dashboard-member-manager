@@ -77,6 +77,10 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.8.3 =
+* don't allow negative donations
+* HTML emails
+
 = 1.8.2 =
 * British and Canadian English translations added
 * option to accept only checks, not PayPal

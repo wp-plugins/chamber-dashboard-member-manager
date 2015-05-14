@@ -63,12 +63,12 @@ function cdashmm_parse_paypal_ipn_request( $wp ) {
                     // email error to site admin
                     $error_to = get_option( 'admin_email' );
                     $error_subject = __( 'Problem with PayPal transaction', 'cdashmm' );
-                    $error_message = __( 'The Chamber Dashboard Member Manager encountered the following error trying to process a PayPal payment on your site, ', 'cdashmm' ) . get_option( 'blogname' )  . "\r\n\r\n";
-                    $error_message .= $result . "\r\n\r\n";
-                    $error_message .= __( 'Please contact Chamber Dashboard support for assistance.', 'cdashmm' );
-                    $error_headers = "From: Chamber Dashboard <" . get_option( 'admin_email' ) . ">\r\n";
+                    $error_message = '<p>' . __( 'The Chamber Dashboard Member Manager encountered the following error trying to process a PayPal payment on your site, ', 'cdashmm' ) . get_option( 'blogname' )  . '<br>';
+                    $error_message .= $result . '</p>';
+                    $error_message .= '<p>' . __( 'Please contact <a href="https://chamberdashboard.com/forums/">Chamber Dashboard support</a> for assistance.', 'cdashmm' ) . '</p>';
+                    $error_from = "From: Chamber Dashboard <" . get_option( 'admin_email' ) . ">";
 
-                    wp_mail( $error_to, $error_subject, $error_message, $error_headers );
+                    cdashmm_send_email( $error_from, $error_to, '', $error_subject, $error_message );
 
                 } else {
                     // generic http error message
@@ -247,40 +247,40 @@ function cdashmm_parse_paypal_ipn_request( $wp ) {
                     // send email receipt to business
                     $receipt_to = $_POST['payer_email'];
                     $receipt_subject = $options['receipt_subject'];
-                    $receipt_message = $options['receipt_message'] . "\r\n\r\n";
-                    $receipt_message .= __( 'Transaction details: ', 'cdashmm' ) . "\r\n\r\n";
-                    $receipt_message .= __( 'Payment amount: ', 'cdashmm' ) . cdashmm_display_price( $_POST['mc_gross'] ) . "\r\n";
-                    $receipt_message .= __( 'Payment date: ', 'cdashmm' ) . $_POST['payment_date'] . "\r\n";
-                    $receipt_message .= __( 'View the invoice: ', 'cdashmm' ) . get_the_permalink( $invoice ) . "\r\n";
+                    $receipt_message = $options['receipt_message'];
+                    $receipt_message .= '<p><strong>' . __( 'Transaction details: ', 'cdashmm' ) . '</strong>';
+                    $receipt_message .= '<p><strong>' . __( 'Payment amount: ', 'cdashmm' ) . '</strong>' . cdashmm_display_price( $_POST['mc_gross'] ) . '<br />';
+                    $receipt_message .= '<strong>' . __( 'Payment date: ', 'cdashmm' ) . '</strong>' . $_POST['payment_date'] . '<br />';
+                    $receipt_message .= '<strong>' . __( 'View the invoice: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $invoice ) . '">' . get_the_permalink( $invoice ) . '</a></p>';
                     // if this is a subscription payment, tell the business they have signed up for automatic renewal and give instructions for cancelling it
                     if( "subscr_payment" == $_POST['txn_type'] ) {
-                         $receipt_message .= __( 'You have signed up for automatic recurring payments through PayPal.  If you need to cancel this recurring payment, you can do so by finding the "My preapproved payments" page of your PayPal account.', 'cdashmm' );
+                         $receipt_message .= '<p>' . __( 'You have signed up for automatic recurring payments through PayPal.  If you need to cancel this recurring payment, you can do so by finding the "My preapproved payments" page of your PayPal account.', 'cdashmm' ) . '</p>';
                     }
-                    $receipt_headers = "From: " . $options['receipt_from_name'] . "<" . $options['receipt_from_email'] . ">\r\n";
+                    $receipt_from = $options['receipt_from_name'] . "<" . $options['receipt_from_email'] . ">";
 
-                    wp_mail( $receipt_to, $receipt_subject, $receipt_message, $receipt_headers );
+                    cdashmm_send_email( $receipt_from, $receipt_to, '', $receipt_subject, $receipt_message );
 
                     // send email to site admin 
                     $admin_to = $options['admin_email'];
                     $admin_subject = __( 'New Payment Received', 'cdashmm' );
-                    $admin_message = __( 'You have just received a new payment from ', 'cdashmm' ) . get_the_title( $business ) . "\r\n";
-                    $admin_message .= __( 'Payment amount: ', 'cdashmm' ) . cdashmm_display_price( $_POST['mc_gross'] ) . "\r\n\r\n";
-                    $admin_message .= __( 'View the invoice: ', 'cdashmm' ) . get_the_permalink( $invoice ) . "\r\n";
+                    $admin_message = '<p><strong>' . __( 'You have just received a new payment from ', 'cdashmm' ) . '</strong>' . get_the_title( $business ) . '</p>';
+                    $admin_message .= '<p><strong>' . __( 'Payment amount: ', 'cdashmm' ) . '</strong>' . cdashmm_display_price( $_POST['mc_gross'] ) . '</p>';
+                    $admin_message .= '<p><strong>' . __( 'View the invoice: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $invoice ) . '">' . get_the_permalink( $invoice ) . '</a></p>';
                     if( isset( $invoice_error ) ) {
-                        $admin_message .= $invoice_error . "\r\n";
+                        $admin_message .= '<p>' . $invoice_error . '</p>';
                     }
-                    $admin_message .= __( 'View the business: ', 'cdashmm' ) . get_the_permalink( $business ) . "\r\n";
+                    $admin_message .= '<p><strong>' . __( 'View the business: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $business ) . '">' . get_the_permalink( $business ) . '</a></p>';
                     if( "draft" == get_post_status( $business) ) {
-                        $admin_message .= get_the_title( $business ) . __( 'is a new business, so you need to publish the new business before it will appear in your member directory.', 'cdashmm' ) . "\r\n";
+                        $admin_message .= '<p>' . get_the_title( $business ) . __( 'is a new business, so you need to publish the new business before it will appear in your member directory.', 'cdashmm' ) . '</p>';
                     }
                     // if this is a subscription payment, say so
                     if( "subscr_payment" == $_POST['txn_type'] ) {
-                        $admin_message .= __( 'This business has signed up for automatic recurring payments.', 'cdashmm');
+                        $admin_message .= '<p>' . __( 'This business has signed up for automatic recurring payments.', 'cdashmm') . '</p>';
                     }
                     // $admin_message = "<pre>" . print_r($_POST, true) . "</pre>";
-                    $admin_headers = "From: Chamber Dashboard <" . $options['receipt_from_email'] . ">\r\n";
+                    $admin_from = "Chamber Dashboard <" . $options['receipt_from_email'] . ">";
 
-                    wp_mail( $admin_to, $admin_subject, $admin_message, $admin_headers );
+                    cdashmm_send_email( $admin_from, $admin_to, '', $admin_subject, $admin_message );
 
                   }
                  
