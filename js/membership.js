@@ -14,7 +14,7 @@ jQuery(document).ready(function ($) {
             $("#subtotal").val(response);
             var val1 = +$("#donation").val();
             var val2 = +$("#subtotal").val();
-            $("#total").val(val1+val2);
+            $(".total").val(val1+val2);
             $("#amount_1").val(response);
         });
     });
@@ -23,7 +23,7 @@ jQuery(document).ready(function ($) {
     $("#donation").on("change", function(){
           var val1 = +$("#donation").val();
           var val2 = +$("#subtotal").val();
-          $("#total").val(val1+val2);
+          $(".total").val(val1+val2);
           $("#amount_2").val(val1);
     });
 
@@ -67,6 +67,26 @@ jQuery(document).ready(function ($) {
         });
 
     });
+
+// if user pays by check, automatic payment option is hidden
+    $('.method').click(function(){
+        if($(this).attr("value")=="paypal"){
+            $(".recurring").show('slow');
+        }
+        if($(this).attr("value")=="check"){
+            $(".recurring").hide('slow');
+        }
+    });
+
+// if user selects recurring payments, a bunch of stuff happens
+    // $('.method').click(function(){
+    //     if($(this).attr("value")=="paypal"){
+    //         $(".recurring").show('slow');
+    //     }
+    //     if($(this).attr("value")=="check"){
+    //         $(".recurring").hide('slow');
+    //     }
+    // });
 
 // when user hits the submit button on the become a member page, create/update the business and create the invoice
     $('#membership_form').on('submit', function (e) {
