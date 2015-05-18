@@ -64,49 +64,55 @@ function cdashmm_membership_signup_form() {
     wp_localize_script( 'membership-form', 'membershipformajax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
 
     $options = get_option( 'cdashmm_options' );
+    $paypal = true;
+    if( !isset( $options['paypal_email'] ) || '' == $options['paypal_email'] ) {
+    	$paypal = false;
+    }
     $cdash_options = get_option( 'cdash_directory_options' );
     $currency = $cdash_options['currency'];
 	$member_form = '';
+	global $member_form;
 
 	// Display form
 	if( !isset( $currency ) ) {
 		$member_form .= __( 'You have not entered in your currency settings.  In your WordPress dashboard, go to the Chamber Dashboard settings page to select what currency you accept.', 'cdashmm' );
 	} else {
 		$member_form .= 
-		'<form id="membership_form" action="https://www.paypal.com/cgi-bin/webscr" method="post">
+		'<form id="membership_form" name="membership_form" action="https://www.paypal.com/cgi-bin/webscr" method="post">
 			<p class="explain">' . __( '* = Required') . '</p>
+			<input name="cdashmm_membership_nonce" id="cdashmm_membership_nonce" type="hidden" value="' . wp_create_nonce( 'cdashmm_membership_nonce' ) . '">
 			<p>
-				<label>' . __( 'Business Name *', 'cdashmm' ) . '</label>
+				<label>' . __( 'Business Name', 'cdashmm' ) . ' *</label>
 				<input name="name" type="text" id="name" required>
 			</p>
 			<div id="business-picker"></div>
 			<input name="business_id" type="hidden" id="business_id" value="">
 			<p>
-				<label>' . __( 'Billing Address *', 'cdashmm' ) . '</label>
+				<label>' . __( 'Billing Address', 'cdashmm' ) . ' *</label>
 				<input name="address" type="text" id="address" required>
 			</p>
 			<p>
-				<label>' . __( 'City *', 'cdashmm' ) . '</label>
+				<label>' . __( 'City', 'cdashmm' ) . ' *</label>
 				<input name="city" type="text" id="city" required>
 			</p>
 			<p>
-				<label>' . __( 'State *', 'cdashmm' ) . '</label>
+				<label>' . __( 'State/Province', 'cdashmm' ) . ' *</label>
 				<input name="state" type="text" id="state" required>
 			</p>
 			<p>
-				<label>' . __( 'Zip *', 'cdashmm' ) . '</label>
+				<label>' . __( 'Zip/Postal Code', 'cdashmm' ) . ' *</label>
 				<input name="zip" type="text" id="zip" required>
 			</p>
 			<p>
-				<label>' . __( 'Email *', 'cdashmm' ) . '</label>
+				<label>' . __( 'Email', 'cdashmm' ) . ' *</label>
 				<input name="email" type="email" id="email" required>
 			</p>
 			<p>
-				<label>' . __( 'Phone Number *', 'cdashmm' ) . '</label>
+				<label>' . __( 'Phone Number', 'cdashmm' ) . ' *</label>
 				<input name="phone" type="text" id="phone" required>
 			</p>
 			<p>
-				<label>' . __( 'Membership Level *', 'cdashmm' ) . '</label>';
+				<label>' . __( 'Membership Level', 'cdashmm' ) . ' *</label>';
 				$levels = get_terms( 'membership_level', 'hide_empty=0' );
 				$predetermined_level = false;
 				if( isset( $_GET['membership_level'] ) ) {
@@ -140,7 +146,7 @@ function cdashmm_membership_signup_form() {
 			<input name="subtotal" type="hidden" id="subtotal" value="' . $starting_price . '">
 			<p>
 				<label>' . __( 'Optional Donation', 'cdashmm' ) . '</label>
-				<input name="donation" type="number" id="donation" value="' . $options['suggested_donation'] . '">';
+				<input name="donation" type="number" min="0" id="donation" value="' . $options['suggested_donation'] . '">';
 				$starting_price += $options['suggested_donation'];
 				if( isset( $options['donation_explanation'] ) ) {
 					$member_form .= '<br /><span class="donation_explanation">' . $options['donation_explanation'] . '</span>';
@@ -148,27 +154,33 @@ function cdashmm_membership_signup_form() {
 			$member_form .= '</p>
 			<p class="total">
 				<label>' . __( 'Total Due: ', 'cdashmm' ) . '</label>
-				<input name="total" id="total" value="' . $starting_price . '" disabled>
-			</p>
-			<p class="method">
-				<label>' . __( 'Payment Method: ', 'cdashmm' ) . '</label>
-				<input name="method" type="radio" value="paypal" checked>&nbsp;' . __( 'PayPal', 'cdashmm' ) . '<br />
-				<input name="method" type="radio" value="check">&nbsp;' . __( 'Check', 'cdashmm' ) . '
-			</p>
-			<input name="cdashmm_membership_nonce" id="cdashmm_membership_nonce" type="hidden" value="' . wp_create_nonce( 'cdashmm_membership_nonce' ) . '">
-			<input type="hidden" name="cmd" value="_cart">
-			<input type="hidden" name="upload" value="1" />
-			<input type="hidden" name="business" value="' . $options['paypal_email'] . '">
-			<input type="hidden" name="return" value="' . get_the_permalink() . '">
-			<input type="hidden" name="currency_code" value="' . $currency . '">
-			<input type="hidden" name="item_name_1" value="Membership">
-			<input type="hidden" name="amount_1" id="amount_1" value="">
-			<input type="hidden" name="item_name_2" value="Donation">
-			<input type="hidden" name="amount_2" id="amount_2" value="' . $options['suggested_donation'] . '">
-			<input type="hidden" name="rm" value="2">
-			<input type="hidden" name="custom" id="invoice_id" value="' . cdashmm_calculate_invoice_number() . '">
-			<input type="hidden" name="cbt" value="Return to ' . $options['orgname'] . '">
-			<input type="hidden" name="notify_url" value="' . home_url() . '/?cdash-member-manager=paypal-ipn">
+				<input name="total" id="total" class="total" value="' . $starting_price . '" disabled>
+			</p>';
+			if( true == $paypal ) {
+				$member_form .= '<p class="method">
+					<label>' . __( 'Payment Method: ', 'cdashmm' ) . '</label>
+					<input name="method" type="radio" value="paypal" id="pay_paypal" class="method" checked>&nbsp;' . __( 'PayPal', 'cdashmm' ) . '<br />
+					<input name="method" type="radio" value="check" id="pay_check" class="method">&nbsp;' . __( 'Check', 'cdashmm' ) . '
+				</p>';
+				do_action( 'cdashmm_recurring_payments_fields', $member_form ); 
+			} else {
+				$member_form .= '<p class="method" style="display: none;">
+					<label>' . __( 'Payment Method: ', 'cdashmm' ) . '</label>
+					<input name="method" type="radio" value="check" id="pay_check" class="method" checked>&nbsp;' . __( 'Check', 'cdashmm' ) . '
+				</p>';
+			}
+			do_action( 'cdashmm_paypal_hidden_fields', $member_form );
+			$member_form .=
+			'
+			
+			<input type="hidden" class="paypal business" name="business" value="' . $options['paypal_email'] . '">
+			<input type="hidden" class="paypal return" name="return" value="' . get_the_permalink() . '">
+			<input type="hidden" class="paypal currency_code" name="currency_code" value="' . $currency . '">
+			<input type="hidden" class="paypal rm" name="rm" value="2">
+			<input type="hidden" class="paypal no_shipping" name="no_shipping" value="1">
+			<input type="hidden" class="paypal custom" name="custom" id="invoice_id" value="' . cdashmm_calculate_invoice_number() . '">
+			<input type="hidden" class="paypal cbt" name="cbt" value="Return to ' . $options['orgname'] . '">
+			<input type="hidden" class="paypal notify_url" name="notify_url" value="' . home_url() . '/?cdash-member-manager=paypal-ipn">
 			<p>
 				<input type="submit" value="' . __( 'Pay Now', 'cdashmm' ) . '">
 			</p>
@@ -179,6 +191,23 @@ function cdashmm_membership_signup_form() {
 }
 add_shortcode( 'membership_form', 'cdashmm_membership_signup_form' );
 
+
+// ------------------------------------------------------------------------
+// Display PayPal hidden fields
+// ------------------------------------------------------------------------
+
+function cdashmm_paypal_cart_fields() {
+	global $member_form;
+	$options = get_option( 'cdashmm_options' );
+	$member_form .= 
+	'<input type="hidden" class="paypal cart cmd" name="cmd" value="_cart">
+	<input type="hidden" class="paypal cart upload" name="upload" value="1" />
+	<input type="hidden" class="paypal cart item_name_1" name="item_name_1" value="' . __( 'Membership', 'cdashmm' ) . '">
+	<input type="hidden" class="paypal cart amount_1" name="amount_1" id="amount_1" value="">
+	<input type="hidden" class="paypal cart item_name_2" name="item_name_2" value="' . __( 'Donation', 'cdashmm' ) . '">
+	<input type="hidden" class="paypal cart amount_2" name="amount_2" id="amount_2" value="' . $options['suggested_donation'] . '">';
+}
+add_action( 'cdashmm_paypal_hidden_fields', 'cdashmm_paypal_cart_fields', 10 );
 
 // ------------------------------------------------------------------------
 // AJAX functions for membership form
@@ -490,26 +519,25 @@ function cdashmm_process_membership_form() {
 		// send email receipt to business
 	    $receipt_to = $email;
 	    $receipt_subject = __( 'Invoice from ', 'cdashmm' ) . $options['orgname'];
-	    $receipt_message = $options['check_message'] . "\r\n\r\n";
-    	$receipt_message .= __( 'View the invoice: ', 'cdashmm' ) . get_the_permalink( $invoice ) . "\r\n";
-        $receipt_headers = "From: " . $options['receipt_from_name'] . "<" . $options['receipt_from_email'] . ">\r\n";
+	    $receipt_message = $options['check_message'];
+    	$receipt_message .= '<p><strong>' . __( 'View the invoice: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $invoice ) . '">' . get_the_permalink( $invoice ) . '</a></p>';
+        $receipt_from = "From: " . $options['receipt_from_name'] . "<" . $options['receipt_from_email'] . ">";
 
-        wp_mail( $receipt_to, $receipt_subject, $receipt_message, $receipt_headers );
+        cdashmm_send_email( $receipt_from, $receipt_to, '', $receipt_subject, $receipt_message );
 
         // send email to site admin 
         $admin_to = $options['admin_email'];
         $admin_subject = __( 'New Payment By Check', 'cdashmm' );
-        $admin_message = get_the_title( $business_id ) . __( ' has just filled out your membership form, and has agree to pay by check.', 'cdashmm' ) . "\r\n";
-        $admin_message .= __( 'Payment amount: ', 'cdashmm' ) . cdashmm_display_price( $total ) . "\r\n\r\n";
-        $admin_message .= __( 'View the invoice: ', 'cdashmm' ) . get_the_permalink( $invoice ) . "\r\n";
-
-        $admin_message .= __( 'View the business: ', 'cdashmm' ) . get_the_permalink( $business_id ) . "\r\n";
+        $admin_message = '<p>' . get_the_title( $business_id ) . __( ' has just filled out your membership form, and will pay by check.', 'cdashmm' ) . '</p>';
+        $admin_message .= '<p><strong>' . __( 'Payment amount: ', 'cdashmm' ) . '</strong>' . cdashmm_display_price( $total ) . '</p>';
+        $admin_message .= '<p><strong>' . __( 'View the invoice: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $invoice ) . '">' . get_the_permalink( $invoice ) . '</a></p>';
+        $admin_message .= '<p><strong>' . __( 'View the business: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $business_id ) . '">' . get_the_permalink( $business_id ) . '</a></p>';
         if( "draft" == get_post_status( $business_id ) ) {
-            $admin_message .= get_the_title( $business_id ) . __( 'is a new business, so you need to publish the new business before it will appear in your member directory.', 'cdashmm' );
+            $admin_message .= '<p>' . get_the_title( $business_id ) . __( 'is a new business, so you need to publish the new business before it will appear in your member directory.', 'cdashmm' ) . '</p>';
         }
-        $admin_headers = "From: Chamber Dashboard <" . $options['receipt_from_email'] . ">\r\n";
+        $admin_from = "Chamber Dashboard <" . $options['receipt_from_email'] . ">";
 
-        wp_mail( $admin_to, $admin_subject, $admin_message, $admin_headers );
+        cdashmm_send_email( $admin_from, $admin_to, '', $admin_subject, $admin_message );
     }
 
 	if( "paypal" == $_POST['method'] ) {
@@ -577,6 +605,10 @@ function cdashmm_single_invoice( $content ) {
 	if( is_singular('invoice') ) {
 		// get options
 		$options = get_option( 'cdashmm_options' );
+	    $paypal = true;
+	    if( !isset( $options['paypal_email'] ) || '' == $options['paypal_email'] ) {
+	    	$paypal = false;
+	    }
 		// get the business associated with this invoice
 		$invoice_id = get_the_id();
         $args = array( 
@@ -586,7 +618,7 @@ function cdashmm_single_invoice( $content ) {
         );
         
         $thisbusiness = new WP_Query( $args );
-        $msg = "<pre>" . print_r($thisbusiness, true) . "</pre>";
+        // $msg = "<pre>" . print_r($thisbusiness, true) . "</pre>";
         // wp_die($msg);
 
         if ( $thisbusiness->have_posts() ) {
@@ -655,8 +687,11 @@ function cdashmm_single_invoice( $content ) {
 							<li><strong>' . __( 'Invoice #: ', 'cdashmm' ) . '</strong><span class="invoice-number"> ' . $invoice_meta['invoice_number'] . '</span></li>
 							<li><strong>' . __( 'Issue Date: ', 'cdashmm' ) . '</strong><span class="issue-date"> ' . get_the_time( 'Y-m-d' ) . '</span></li>
 							<li><strong>' . __( 'Due Date: ', 'cdashmm' ) . '</strong><span class="due-date"> ' . $duedate . '</span></li>
-							<li><strong>' . __( 'Status: ', 'cdashmm' ) . '</strong><span class="status"> ' . $this_status . '</span></li>
-						</ul>
+							<li><strong>' . __( 'Status: ', 'cdashmm' ) . '</strong><span class="status"> ' . $this_status . '</span></li>';
+							if( "Paid" == $this_status && isset( $invoice_meta['paiddate'] ) ) {
+								$invoice_content .= '<li><strong>' . __( 'Paid Date: ', 'cdashmm' ) . '</strong><span class="status"> ' . $invoice_meta['paiddate'] . '</span></li>';
+							}
+						$invoice_content .= '</ul>
 					</div>
 				</div>
 				<div class="invoice-description">'
@@ -704,7 +739,7 @@ function cdashmm_single_invoice( $content ) {
 			</div><!-- #print-invoice -->';
 
 			// the invoice hasn't been paid, so we'll include a payment button
-			if( 'Paid' !== $this_status ) {
+			if( 'Paid' !== $this_status && true == $paypal ) {
 				$invoice_content .=
 				'<div class="payment-form">
 					<form id="invoice_form" action="https://www.paypal.com/cgi-bin/webscr" method="post">
