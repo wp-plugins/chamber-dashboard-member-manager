@@ -169,18 +169,19 @@ function cdashmm_membership_signup_form() {
 					<input name="method" type="radio" value="check" id="pay_check" class="method" checked>&nbsp;' . __( 'Check', 'cdashmm' ) . '
 				</p>';
 			}
+			$member_form .= '<div class="hidden-paypal-fields">';
 			do_action( 'cdashmm_paypal_hidden_fields', $member_form );
-			$member_form .=
+			$member_form .= 
 			'
-			
-			<input type="hidden" class="paypal business" name="business" value="' . $options['paypal_email'] . '">
-			<input type="hidden" class="paypal return" name="return" value="' . get_the_permalink() . '">
-			<input type="hidden" class="paypal currency_code" name="currency_code" value="' . $currency . '">
-			<input type="hidden" class="paypal rm" name="rm" value="2">
-			<input type="hidden" class="paypal no_shipping" name="no_shipping" value="1">
-			<input type="hidden" class="paypal custom" name="custom" id="invoice_id" value="' . cdashmm_calculate_invoice_number() . '">
-			<input type="hidden" class="paypal cbt" name="cbt" value="Return to ' . $options['orgname'] . '">
-			<input type="hidden" class="paypal notify_url" name="notify_url" value="' . home_url() . '/?cdash-member-manager=paypal-ipn">
+				<input type="hidden" class="paypal business" name="business" value="' . $options['paypal_email'] . '">
+				<input type="hidden" class="paypal return" name="return" value="' . get_the_permalink() . '">
+				<input type="hidden" class="paypal currency_code" name="currency_code" value="' . $currency . '">
+				<input type="hidden" class="paypal rm" name="rm" value="2">
+				<input type="hidden" class="paypal no_shipping" name="no_shipping" value="1">
+				<input type="hidden" class="paypal custom" name="custom" id="invoice_id" value="' . cdashmm_calculate_invoice_number() . '">
+				<input type="hidden" class="paypal cbt" name="cbt" value="Return to ' . $options['orgname'] . '">
+				<input type="hidden" class="paypal notify_url" name="notify_url" value="' . home_url() . '/?cdash-member-manager=paypal-ipn">
+			</div>
 			<p>
 				<input type="submit" value="' . __( 'Pay Now', 'cdashmm' ) . '">
 			</p>
@@ -199,6 +200,7 @@ add_shortcode( 'membership_form', 'cdashmm_membership_signup_form' );
 function cdashmm_paypal_cart_fields() {
 	global $member_form;
 	$options = get_option( 'cdashmm_options' );
+	// note to self - this code is also in membership.js
 	$member_form .= 
 	'<input type="hidden" class="paypal cart cmd" name="cmd" value="_cart">
 	<input type="hidden" class="paypal cart upload" name="upload" value="1" />
@@ -206,6 +208,7 @@ function cdashmm_paypal_cart_fields() {
 	<input type="hidden" class="paypal cart amount_1" name="amount_1" id="amount_1" value="">
 	<input type="hidden" class="paypal cart item_name_2" name="item_name_2" value="' . __( 'Donation', 'cdashmm' ) . '">
 	<input type="hidden" class="paypal cart amount_2" name="amount_2" id="amount_2" value="' . $options['suggested_donation'] . '">';
+
 }
 add_action( 'cdashmm_paypal_hidden_fields', 'cdashmm_paypal_cart_fields', 10 );
 

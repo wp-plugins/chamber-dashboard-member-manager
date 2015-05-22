@@ -79,14 +79,33 @@ jQuery(document).ready(function ($) {
     });
 
 // if user selects recurring payments, a bunch of stuff happens
-    // $('.method').click(function(){
-    //     if($(this).attr("value")=="paypal"){
-    //         $(".recurring").show('slow');
-    //     }
-    //     if($(this).attr("value")=="check"){
-    //         $(".recurring").hide('slow');
-    //     }
-    // });
+    $('.recurring-option').click(function(){
+        if($(this).attr("value")=="yes"){
+            $('.cart').remove();
+            // note to self - this code is also in cdash-recurring-payments.php, function cdashrp_paypal_subscription_fields
+            var fields = "<input type='hidden' class='paypal recurring-field cmd' name='cmd' value='_xclick-subscriptions'>\
+            <input type='hidden' class='paypal recurring-field item_name' name='item_name' value='Membership'>\
+            <input type='hidden' class='paypal recurring-field a3 price total' name='a3' value=''>\
+            <input type='hidden' class='paypal recurring-field p3 duration' name='p3' value='1'>\
+            <input type='hidden' class='paypal recurring-field t3 duration-unit' name='t3' value='Y'>\
+            <input type='hidden' class='paypal recurring-field src' name='src' value='1'>\
+            <input type='hidden' class='paypal recurring-field no_note' name='no_note' value='1'>\
+            <input type='hidden' class='paypal recurring-field sra' name='sra' value='1'>";
+            $('.hidden-paypal-fields').append(fields);
+            
+        }
+        if($(this).attr("value")=="no"){
+           $('.recurring-field').remove();
+           var donation = $('#donation').val();
+           // note to self - this code is also in views.php, function cdashmm_paypal_hidden_fields
+            var fields = "<input type='hidden' class='paypal cart cmd' name='cmd' value='_cart'>\
+            <input type='hidden' class='paypal cart upload' name='upload' value='1' />\
+            <input type='hidden' class='paypal cart item_name_1' name='item_name_1' value='Membership'>\
+            <input type='hidden' class='paypal cart amount_1' name='amount_1' id='amount_1' value=''>\
+            <input type='hidden' class='paypal cart item_name_2' name='item_name_2' value='Donation'><input type='hidden' class='paypal cart amount_2' name='amount_2' id='amount_2' value='" + donation + ">";
+            $('.hidden-paypal-fields').append(fields);
+        }
+    });
 
 // when user hits the submit button on the become a member page, create/update the business and create the invoice
     $('#membership_form').on('submit', function (e) {
