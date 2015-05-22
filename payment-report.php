@@ -97,12 +97,13 @@ function cdashmm_generate_payment_report() { ?>
 								  'connected_type' => 'invoices_to_businesses',
 								  'connected_items' => get_the_id(),
 								  'nopaging' => true,
-								  'suppress_filters' => false
+								  'suppress_filters' => false,
+								  'post_status' => 'any'
 								) );
 								foreach( $thisbusiness as $thisone ) {
 									$business = $thisone->post_title . '<br />';
 									$business .= '<a href="' . get_edit_post_link( $thisone->ID ) . '">' . __( 'Edit', 'cdashmm' ) . '</a> |';
-									$business .= '<a href="' . get_permalink( $thisone->ID ) . '"?>' . __( 'View', 'cdashrp' ) . '</a>';
+									$business .= '<a href="' . get_permalink( $thisone->ID ) . '">' . __( 'View', 'cdashrp' ) . '</a>';
 								}
 	        					$invoice_number = '';
 	        					if( isset( $invoice_meta['invoice_number'] ) )

@@ -77,6 +77,9 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.8.6 = 
+* made payment report recognize draft businesses
+
 = 1.8.5 = 
 * updates to improve compatibility with recurring payments
 
