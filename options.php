@@ -369,6 +369,24 @@ function cdashmm_options_section_callback(  ) {
 
 function cdashmm_validate_options( $input ) {
 
+	$allowed = array(
+	    'a' => array(
+	        'href' => array(),
+	        'title' => array()
+	    ),
+	    'br' => array(),
+	    'p' => array(),
+	    'em' => array(),
+	    'strong' => array(),
+	    'li' => array(),
+	    'ul' => array(),
+	    'ol' => array(),
+	    'h1' => array(),
+	    'h2' => array(),
+	    'h3' => array(),
+	    'h4' => array(),
+	);
+
     if( isset( $input['paypal_email'] ) ) {
     	$input['paypal_email'] = strip_tags( stripslashes( $input['paypal_email'] ) );
     }
@@ -390,11 +408,11 @@ function cdashmm_validate_options( $input ) {
     }
 
     if( isset( $input['receipt_message'] ) ) {
-    	$input['receipt_message'] = wp_kses( $input['receipt_message'] );
+    	$input['receipt_message'] = wp_kses( $input['receipt_message'], $allowed );
     }
 
     if( isset( $input['check_message'] ) ) {
-    	$input['check_message'] = wp_kses( $input['check_message'] );
+    	$input['check_message'] = wp_kses( $input['check_message'], $allowed );
     }
 
     if( isset( $input['admin_email'] ) ) {
@@ -402,11 +420,11 @@ function cdashmm_validate_options( $input ) {
     }
 
     if( isset( $input['invoice_from'] ) ) {
-    	$input['invoice_from'] = wp_kses( $input['invoice_from'] );
+    	$input['invoice_from'] = wp_kses( $input['invoice_from'], $allowed );
     }
 
     if( isset( $input['invoice_footer'] ) ) {
-    	$input['invoice_footer'] = wp_kses( $input['invoice_footer'] );
+    	$input['invoice_footer'] = wp_kses( $input['invoice_footer'], $allowed );
     }
 
     if( isset( $input['suggested_donation'] ) ) {
@@ -426,7 +444,7 @@ function cdashmm_validate_options( $input ) {
     }
 
     if( isset( $input['invoice_message'] ) ) {
-    	$input['invoice_message'] = wp_kses( $input['invoice_message'] );
+    	$input['invoice_message'] = wp_kses( $input['invoice_message'], $allowed );
     }
 
     if( isset( $input['reminder_frequency'] ) ) {
@@ -438,7 +456,7 @@ function cdashmm_validate_options( $input ) {
     }
 
 	if( isset( $input['reminder_message'] ) ) {
-    	$input['reminder_message'] = wp_kses( $input['reminder_message'] );
+    	$input['reminder_message'] = wp_kses( $input['reminder_message'], $allowed );
     }
 
     if( isset( $input['recurring_payments_license'] ) ) {
