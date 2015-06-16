@@ -3,9 +3,10 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.7
+Version: 1.8.8
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
+Text Domain: cdashmm
 */
 
 /*  Copyright 2014 Morgan Kay and the Fremont Chamber of Commerce (email : info@chamberdashboard.com)
@@ -73,7 +74,7 @@ function cdashmm_business_directory_notice(){
 // Set-up Action and Filter Hooks
 register_activation_hook(__FILE__, 'cdashmm_add_defaults');
 register_uninstall_hook(__FILE__, 'cdashmm_delete_plugin_options');
-add_action('admin_init', 'cdashmm_init' );
+// add_action('admin_init', 'cdashmm_init' );
 add_action('admin_menu', 'cdashmm_add_options_page');
 add_filter( 'plugin_action_links', 'cdashmm_plugin_action_links', 10, 2 );
 
@@ -149,7 +150,7 @@ function cdashmm_register_tax_membership_status() {
         'Current', // the term 
         'membership_status', // the taxonomy
         array(
-            'description'=> 'Membership is current',
+            'description'=> __( 'Membership is current', 'cdashmm' ),
             'slug' => 'current',
         )
     );
@@ -158,7 +159,7 @@ function cdashmm_register_tax_membership_status() {
         'Lapsed', // the term 
         'membership_status', // the taxonomy
         array(
-            'description'=> 'Membership has lapsed due to lack of payment',
+            'description'=> __( 'Membership has lapsed due to lack of payment', 'cdashmm' ),
             'slug' => 'lapsed',
         )
     );
@@ -205,7 +206,7 @@ function cdashmm_register_tax_invoice_status() {
         'Paid', // the term 
         'invoice_status', // the taxonomy
         array(
-            'description'=> 'Invoice has been paid',
+            'description'=> __( 'Invoice has been paid', 'cdashmm' ),
             'slug' => 'paid',
         )
     );
@@ -214,7 +215,7 @@ function cdashmm_register_tax_invoice_status() {
         'Pending', // the term 
         'invoice_status', // the taxonomy
         array(
-            'description'=> 'Payment initiated, but not completed',
+            'description'=> __( 'Payment initiated, but not completed', 'cdashmm' ),
             'slug' => 'pending',
         )
     );
@@ -223,7 +224,7 @@ function cdashmm_register_tax_invoice_status() {
         'Overdue', // the term 
         'invoice_status', // the taxonomy
         array(
-            'description'=> 'Invoice is overdue',
+            'description'=> __( 'Invoice is overdue', 'cdashmm' ),
             'slug' => 'overdue',
         )
     );
@@ -232,8 +233,17 @@ function cdashmm_register_tax_invoice_status() {
         'Open', // the term 
         'invoice_status', // the taxonomy
         array(
-            'description'=> 'Invoice is open',
+            'description'=> __( 'Invoice is open', 'cdashmm' ),
             'slug' => 'open',
+        )
+    );
+
+    wp_insert_term(
+        'Unpaid', // the term 
+        'invoice_status', // the taxonomy
+        array(
+            'description'=> __( 'Invoice is unpaid.  Invoices will automatically be marked unpaid after 4 months', 'cdashmm' ),
+            'slug' => 'unpaid',
         )
     );
 
@@ -275,7 +285,7 @@ function cdashmm_register_cpt_invoice() {
         'menu_position'       => 5,
         'menu_icon'           => 'dashicons-cart',
         'can_export'          => true,
-        'has_archive'         => true,
+        'has_archive'         => false,
         'exclude_from_search' => true,
         'publicly_queryable'  => true,
         'capability_type'     => 'page',
@@ -380,10 +390,10 @@ if( class_exists( 'WPAlchemy_MetaBox' ) ) {
 // Enqueue JS for invoice metabox
 function cdashmm_invoice_script_enqueue($hook) {
     global $post;  
-    global $reports_page;
-  
-    if ( $hook == 'post-new.php' || $hook == 'post.php' || $hook == $reports_page ) {  
-        if ( 'invoice' === $post->post_type || 'business' === $post->post_type || $hook == $reports_page ) {       
+
+    if ( 'post-new.php' == $hook || 'post.php' == $hook || 'invoice_page_payment-report' == $hook ) { 
+
+        if ( ( isset( $post ) && ( 'invoice' === $post->post_type || 'business' === $post->post_type ) ) || 'invoice_page_payment-report' == $hook ) {       
             wp_enqueue_script( 'invoice-meta', plugin_dir_url(__FILE__) . 'js/invoices.js', array( 'jquery' ) );
             wp_localize_script( 'invoice-meta', 'invoiceajax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) ); 
 
@@ -443,6 +453,9 @@ add_action( 'wp_ajax_cdashmm_update_membership_price', 'cdashmm_update_membershi
 // When you create an invoice, automatically generate the invoice number
 
 function cdashmm_insert_invoice_id( $post_id ) {
+    if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) { // don't do this in quick edit
+        return;
+    }
 
     $invoicefields = array( 
         '_cdashmm_invoice_number',
@@ -467,16 +480,39 @@ function cdashmm_insert_invoice_id( $post_id ) {
 }
 add_action( 'save_post_invoice', 'cdashmm_insert_invoice_id' );
 
+
+// If no other invoice status has been selected, invoice will default to 'open'
+// http://wordpress.mfields.org/2010/set-default-terms-for-your-custom-taxonomies-in-wordpress-3-0/
+function cdashmm_default_invoice_status( $post_id, $post ) {
+    if ( 'publish' === $post->post_status ) {
+        $defaults = array(
+            'invoice_status' => array( 'open' ),
+            );
+        $taxonomies = get_object_taxonomies( $post->post_type );
+        foreach ( (array) $taxonomies as $taxonomy ) {
+            $terms = wp_get_post_terms( $post_id, $taxonomy );
+            if ( empty( $terms ) && array_key_exists( $taxonomy, $defaults ) ) {
+                wp_set_object_terms( $post_id, $defaults[$taxonomy], $taxonomy );
+            }
+        }
+    }
+}
+add_action( 'save_post', 'cdashmm_default_invoice_status', 100, 2 );
+
 // ------------------------------------------------------------------------
 // ADD COLUMNS TO INVOICES OVERVIEW PAGE
 // ------------------------------------------------------------------------
 
+// thanks to https://github.com/bamadesigner/manage-wordpress-posts-using-bulk-edit-and-quick-edit/blob/master/manage_wordpress_posts_using_bulk_edit_and_quick_edit.php
+add_filter('manage_invoice_posts_columns', 'cdashmm_invoices_overview_columns_headers', 10);
 function cdashmm_invoices_overview_columns_headers($defaults) {
-    $defaults['invoice_number'] = 'Invoice #';
-    $defaults['invoice_amount'] = 'Amount';
+    $defaults['invoice_number'] = __( 'Invoice #', 'cdashmm' );
+    $defaults['invoice_amount'] = __( 'Amount', 'cdashmm' );
+    $defaults['due_date'] = __( 'Due Date', 'cdashmm' );
     return $defaults;
 }
 
+add_action('manage_invoice_posts_custom_column', 'cdashmm_invoices_overview_columns', 10, 2);
 function cdashmm_invoices_overview_columns($column_name, $post_ID) {
     global $invoice_metabox;
     $invoicemeta = $invoice_metabox->the_meta();
@@ -495,10 +531,57 @@ function cdashmm_invoices_overview_columns($column_name, $post_ID) {
         }
         echo $invoice_amount;
     }  
+
+    if ($column_name == 'due_date') {
+        $due_date = '';
+        if( isset( $invoicemeta['duedate'] ) ) {
+            $due_date = $invoicemeta['duedate'];
+        }
+        echo $due_date;
+    }  
 }
 
-add_filter('manage_invoice_posts_columns', 'cdashmm_invoices_overview_columns_headers', 10);
-add_action('manage_invoice_posts_custom_column', 'cdashmm_invoices_overview_columns', 10, 2);
+add_filter( 'manage_edit-invoice_sortable_columns', 'cdashmm_make_invoice_columns_sortable' );
+function cdashmm_make_invoice_columns_sortable( $sortable_columns ) {
+
+    $sortable_columns[ 'due_date' ] = 'due_date';
+    $sortable_columns[ 'invoice_amount' ] = 'invoice_amount';
+
+    return $sortable_columns;
+}
+
+add_action( 'pre_get_posts', 'cdashmm_sort_invoice_columns', 1 );
+function cdashmm_sort_invoice_columns( $query ) {
+
+    if ( $query->is_main_query() && ( $orderby = $query->get( 'orderby' ) ) ) {
+        switch( $orderby ) {
+            // If we're ordering by 'film_rating'
+            case 'invoice_amount':
+                $query->set( 'meta_key', '_cdashmm_amount' );
+                $query->set( 'orderby', 'meta_value_num' );
+                break;
+        }
+    }
+}
+
+add_filter( 'posts_clauses', 'cdashmm_sort_complicated_columns', 1, 2 );
+function cdashmm_sort_complicated_columns( $pieces, $query ) {
+    global $wpdb;
+
+    if ( $query->is_main_query() && ( $orderby = $query->get( 'orderby' ) ) ) {
+        $order = strtoupper( $query->get( 'order' ) );
+        if ( ! in_array( $order, array( 'ASC', 'DESC' ) ) )
+            $order = 'ASC';
+
+        switch( $orderby ) {
+            case 'due_date':
+            $pieces[ 'join' ] .= " LEFT JOIN $wpdb->postmeta wp_rd ON wp_rd.post_id = {$wpdb->posts}.ID AND wp_rd.meta_key = '_cdashmm_duedate'";
+            $pieces[ 'orderby' ] = "STR_TO_DATE( wp_rd.meta_value,'%Y/%m/%d' ) $order, " . $pieces[ 'orderby' ];
+            break;
+        }
+    }
+    return $pieces;
+}
 
 
 // ------------------------------------------------------------------------
@@ -801,10 +884,12 @@ function cdashmm_calculate_invoice_number() {
     
     $invoices = new WP_Query( $args );
 
-    if ( $invoices->have_posts() ) :
+    if ( $invoices->have_posts() ) {
         $newinvoice = $invoices->found_posts;
         $invoicenumber = cdashmm_check_for_duplicate_invoice_number( $newinvoice );
-    endif;
+    } else {
+        $invoicenumber = cdashmm_check_for_duplicate_invoice_number( '1' );
+    }
     wp_reset_postdata();
 
     return $invoicenumber;    
@@ -849,6 +934,264 @@ function cdashmm_display_price( $price ) {
 
 
 // ------------------------------------------------------------------------
+// Reusable email
+// ------------------------------------------------------------------------
+
+function cdashmm_send_email( $from, $to, $cc, $subject, $message ) {
+
+    $options = get_option( 'cdashmm_options' );
+
+    $headers = "From: " . $from . " \r\n";
+    if( isset( $cc ) && '' !== $cc ) {
+        $headers .= "Cc: " . $cc . "\r\n";
+    }
+    $headers .= "MIME-Version: 1.0\r\n";
+    $headers .= "Content-Type: text/html; charset=ISO-8859-1\r\n";
+
+    $subject = $subject;
+
+    $message = '
+        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+        <meta name="viewport" content="width=device-width" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>Really Simple HTML Email Template</title>
+        <style>
+        /* -------------------------------------
+                GLOBAL
+        ------------------------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;
+            font-size: 100%;
+            line-height: 1.6;
+        }
+
+        img {
+            max-width: 100%;
+        }
+
+        body {
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: none;
+            width: 100%!important;
+            height: 100%;
+        }
+
+
+        /* -------------------------------------
+                ELEMENTS
+        ------------------------------------- */
+        a {
+            color: #0F75BD;
+        }
+
+        .btn-primary {
+            text-decoration: none;
+            color: #FFF;
+            background-color: #348eda;
+            border: solid #348eda;
+            border-width: 10px 20px;
+            line-height: 2;
+            font-weight: bold;
+            margin-right: 10px;
+            text-align: center;
+            cursor: pointer;
+            display: inline-block;
+            border-radius: 25px;
+        }
+
+        .btn-secondary {
+            text-decoration: none;
+            color: #FFF;
+            background-color: #aaa;
+            border: solid #aaa;
+            border-width: 10px 20px;
+            line-height: 2;
+            font-weight: bold;
+            margin-right: 10px;
+            text-align: center;
+            cursor: pointer;
+            display: inline-block;
+            border-radius: 25px;
+        }
+
+        .last {
+            margin-bottom: 0;
+        }
+
+        .first {
+            margin-top: 0;
+        }
+
+        .padding {
+            padding: 10px 0;
+        }
+
+
+        /* -------------------------------------
+                BODY
+        ------------------------------------- */
+        table.body-wrap {
+            width: 100%;
+            padding: 20px;
+        }
+
+        table.body-wrap .container {
+            border: 1px solid #f0f0f0;
+        }
+
+
+        /* -------------------------------------
+                FOOTER
+        ------------------------------------- */
+        table.footer-wrap {
+            width: 100%;    
+            clear: both!important;
+        }
+
+        .footer-wrap .container p {
+            font-size: 12px;
+            color: #666;
+            
+        }
+
+        table.footer-wrap a {
+            color: #999;
+        }
+
+
+        /* -------------------------------------
+                TYPOGRAPHY
+        ------------------------------------- */
+        h1, h2, h3 {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+            color: #000;
+            margin: 40px 0 10px;
+            line-height: 1.2;
+            font-weight: 200;
+        }
+
+        h1 {
+            font-size: 36px;
+        }
+        h2 {
+            font-size: 28px;
+        }
+        h3 {
+            font-size: 22px;
+        }
+
+        p, ul, ol {
+            margin-bottom: 10px;
+            font-weight: normal;
+            font-size: 14px;
+        }
+
+        ul li, ol li {
+            margin-left: 5px;
+            list-style-position: inside;
+        }
+
+        /* ---------------------------------------------------
+                RESPONSIVENESS
+                Nuke it from orbit. It is the only way to be sure.
+        ------------------------------------------------------ */
+
+        /* Set a max-width, and make it display as block so it will automatically stretch to that width, but will also shrink down on a phone or something */
+        .container {
+            display: block!important;
+            max-width: 600px!important;
+            margin: 0 auto!important; /* makes it centered */
+            clear: both!important;
+        }
+
+        /* Set the padding on the td rather than the div for Outlook compatibility */
+        .body-wrap .container {
+            padding: 20px;
+        }
+
+        /* This should also be a block element, so that it will fill 100% of the .container */
+        .content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        /* Make sure tables in the content area are 100% wide */
+        .content table {
+            width: 100%;
+        }
+
+        </style>
+        </head>
+
+        <body bgcolor="#f6f6f6">
+
+        <!-- body -->
+        <table class="body-wrap" bgcolor="#f6f6f6">
+            <tr>
+                <td></td>
+                <td class="container" bgcolor="#FFFFFF">
+
+                    <!-- content -->
+                    <div class="content">
+                    <table>
+                        <tr>
+                            <td>
+                                ' . $message . '
+                            </td>
+                        </tr>
+                    </table>
+                    </div>
+                    <!-- /content -->
+                    
+                </td>
+                <td></td>
+            </tr>
+        </table>
+        <!-- /body -->
+
+        <!-- footer -->
+        <table class="footer-wrap">
+            <tr>
+                <td></td>
+                <td class="container">
+                    
+                    <!-- content -->
+                    <div class="content">
+                        <table>
+                            <tr>
+                                <td align="center">
+                                    <p>
+                                        <a href="' . site_url() . '">' . $options['orgname'] . '</a>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <!-- /content -->
+                    
+                </td>
+                <td></td>
+            </tr>
+        </table>
+        <!-- /footer -->
+
+        </body>
+        </html>
+    ';
+
+
+    $success = wp_mail( $to, $subject, $message, $headers );
+
+    return $success;
+
+}
+
+// ------------------------------------------------------------------------
 // Send invoice notification email
 // ------------------------------------------------------------------------
 
@@ -888,30 +1231,33 @@ function cdashmm_send_invoice_notification_email() {
         $to .= $email . ', ';
     }
 
+    $from = $options['receipt_from_name'] . " <" . $options['receipt_from_email'] . ">";
+
     $subject = __( 'Invoice from ', 'cdashmm' ) . $options['orgname'];
+
+    $cc = '';
 
     if( isset( $_POST['copy_to'] ) && $_POST['copy_to'] !== '') {
         $copy_tos = array();
         parse_str( $_POST['copy_to'], $copy_tos );
         $emails = $copy_tos['copy_to'];
         foreach( $emails as $email ) {
-            $headers[] = "Cc: " . $email . "\r\n";
+            // $headers[] = "Cc: " . $email . "\r\n";
         }
+        $cc = $email . ",";
     }
-
-    $headers[] = "From" . $options['receipt_from_name'] . "<" . $options['receipt_from_email'] . ">\r\n";
 
     $message = '';
     if( isset( $_POST['message'] ) && $_POST['message'] !== '' ) {
-        $message .= sanitize_text_field( $_POST['message'] ) . "\r\n\r\n";
+        $message .= '<p>' . implode( "<br />", array_map( 'sanitize_text_field', explode( "\n", $_POST['message'] ) ) ) . '</p><br />';
     }
-    $message .= __( 'Invoice from: ', 'cdashmm' ) . $options['receipt_from_name'] . "\r\n";
-    $message .= __( 'Invoice #: ', 'cdashmm' ) . $invoiceinfo['invoice_number'] . "\r\n";
-    $message .= __( 'Amount: ', 'cdashmm' ) . cdashmm_display_price( $invoiceinfo['amount'] ) . "\r\n";
-    $message .= __( 'Due date: ', 'cdashmm' ) . $invoiceinfo['duedate'] . "\r\n\r\n";
-    $message .= __( 'View this invoice online: ', 'cdashmm' ) . get_the_permalink( $invoiceid ) . "\r\n";
+    $message .= '<p><strong>' . __( 'Invoice from: ', 'cdashmm' ) . '</strong>' . $options['receipt_from_name'] . '</p>';
+    $message .= '<p><strong>' . __( 'Invoice #: ', 'cdashmm' ) . '</strong>' . $invoiceinfo['invoice_number'] . '</p>';
+    $message .= '<p><strong>' . __( 'Amount: ', 'cdashmm' ) . '</strong>' . cdashmm_display_price( $invoiceinfo['amount'] ) . '</p>';
+    $message .= '<p><strong>' . __( 'Due date: ', 'cdashmm' ) . '</strong>' . $invoiceinfo['duedate'] . '</p><br />';
+    $message .= '<p><strong>' . __( 'View this invoice online: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $invoiceid ) . '">' . get_the_permalink( $invoiceid ) . '</a></p>';
 
-    wp_mail( $to, $subject, $message, $headers );
+    cdashmm_send_email( $from, $to, $cc, $subject, $message );
 
     $results = array();
 
@@ -920,31 +1266,7 @@ function cdashmm_send_invoice_notification_email() {
     // update post meta to record that the message was sent
     $today = date('Y-m-d');
 
-    $oldnotifications = get_post_meta( $invoiceid, '_cdashmm_notification' );
-
-    if( isset( $oldnotifications ) ) {
-        $notification_array = $oldnotifications[0];
-        $new_notification = array(
-                'notification_date' => $today,
-                'notification_to' => $to,
-            );
-        $notification_array[] = $new_notification;
-
-        update_post_meta( $invoiceid, '_cdashmm_notification', $notification_array ); 
-
-    } else {
-        $fields = array( '_cdashmm_notification' );
-        $str = $fields;
-        add_post_meta( $invoiceid, 'notification_meta_fields', $str );
-
-        $notificationinfo = array(
-            array(
-                'notification_date' => $today,
-                'notification_to' => $to,
-            )
-        );
-        add_post_meta( $invoiceid, '_cdashmm_notification', $notificationinfo );    
-    }
+    cdashmm_update_notification_history( $invoiceid, $today, $to);
 
     $results['today'] = $today;
     $results['to'] = $to;
@@ -956,11 +1278,42 @@ function cdashmm_send_invoice_notification_email() {
 }
 add_action( 'wp_ajax_cdashmm_send_invoice_notification_email', 'cdashmm_send_invoice_notification_email' );
 
+// ------------------------------------------------------------------------
+// Function to update notifications
+// ------------------------------------------------------------------------
 
+function cdashmm_update_notification_history( $id, $date, $to ) {
+
+    $oldnotifications = get_post_meta( $id, '_cdashmm_notification' );
+
+    if( !empty( $oldnotifications ) ) {
+        $notification_array = $oldnotifications[0];
+        $new_notification = array(
+                'notification_date' => $date,
+                'notification_to' => $to,
+            );
+        $notification_array[] = $new_notification;
+
+        update_post_meta( $id, '_cdashmm_notification', $notification_array ); 
+
+    } else {
+        $fields = array( '_cdashmm_notification' );
+        $str = $fields;
+        update_post_meta( $id, 'notification_meta_fields', $fields );
+
+        $notificationinfo = array(
+            array(
+                'notification_date' => $date,
+                'notification_to' => $to,
+            )
+        );
+        add_post_meta( $id, '_cdashmm_notification', $notificationinfo );    
+    }
+}
 
 
 // ------------------------------------------------------------------------
-// Cron job - once a day, check for overdue invoices and mark them overdue
+// Cron job - once a day, check for overdue invoices, unpaid invoices, and lapsed memberships
 // ------------------------------------------------------------------------
 
 if ( ! wp_next_scheduled( 'cdashmm_check_for_overdue_invoices' ) ) {
@@ -976,7 +1329,7 @@ function cdashmm_update_overdue_invoices() {
     // get overdue status
     $overdue_status = get_term_by( 'slug', 'overdue', 'invoice_status' );
 
-    // find invoices with a due date earlier than today
+    // find unpaid invoices with a due date earlier than today
     $args = array( 
         'post_type' => 'invoice',
         'post_status' => 'any',
@@ -984,18 +1337,75 @@ function cdashmm_update_overdue_invoices() {
         'meta_key' => '_cdashmm_duedate',
         'meta_value' => $today,
         'meta_compare' => '<', 
+        'tax_query' => array(
+            array(
+                'taxonomy' => 'invoice_status',
+                'field'    => 'slug',
+                'terms'    => 'paid',
+                'operator' => 'NOT IN',
+            ),
+        ),
+        // should I also check for whether the "amount paid" field is filled in?
     );
     
     $overdue = new WP_Query( $args );
 
     if ( $overdue->have_posts() ) :
         while ( $overdue->have_posts() ) : $overdue->the_post();
-            // update invoice status
+            // change invoice status to overdue
             wp_set_object_terms( get_the_id(), $overdue_status->term_id, 'invoice_status', false );
+
+            // check whether we need to lapse membership
+            $options = get_option( 'cdashmm_options' );
+            if( isset( $options['lapse_membership'] ) && "1" == $options['lapse_membership'] ) {
+                // if invoice includes membership, find the business
+                global $invoice_metabox;
+                $meta = $invoice_metabox->the_meta();
+                if( isset( $meta['item_membershiplevel'] ) ) {
+                    $lapsed_status = get_term_by( 'slug', 'lapsed', 'membership_status' );
+                    $lapsed_business = new WP_Query( array(
+                      'connected_type' => 'invoices_to_businesses',
+                      'connected_items' => get_the_id(),
+                      'nopaging' => true,
+                    ) );
+
+                    if ( $lapsed_business->have_posts() ) :
+                        while ( $lapsed_business->have_posts() ) : $lapsed_business->the_post();
+                            // mark membership as lapsed
+                            wp_set_object_terms( get_the_id(), $lapsed_status->term_id, 'membership_status', false );
+                        endwhile;
+                    endif;
+                    wp_reset_postdata();
+                }
+            }
         endwhile;
     endif;
     wp_reset_postdata();
+
+    // get unpaid status
+    $unpaid_status = get_term_by( 'slug', 'unpaid', 'invoice_status' );
+    $too_long = date( 'Y-m-d', strtotime( '-4 months', current_time( 'timestamp') ) );
+
+    // find overdue invoices with a due date earlier than 4 months ago
+    $args = array( 
+        'post_type' => 'invoice',
+        'post_status' => 'any',
+        'posts_per_page' => -1,                  
+        'meta_key' => '_cdashmm_duedate',
+        'meta_value' => $too_long,
+        'meta_compare' => '<', 
+    );
     
+    $unpaid = new WP_Query( $args );
+
+    if ( $unpaid->have_posts() ) :
+        while ( $unpaid->have_posts() ) : $unpaid->the_post();
+            // change invoice status to unpaid
+            wp_set_object_terms( get_the_id(), $unpaid_status->term_id, 'invoice_status', false );
+
+        endwhile;
+    endif;
+    wp_reset_postdata();
 }
 
 // remove the cron job on deactivation
@@ -1003,5 +1413,30 @@ register_deactivation_hook( __FILE__, 'cdashmm_remove_overdue_invoice_cron_job' 
 function cdashmm_remove_overdue_invoice_cron_job() {
     wp_clear_scheduled_hook( 'cdashmm_check_for_overdue_invoices' );
 }
+
+
+// ------------------------------------------------------------------------
+// Display ad for recurring payments in membership renewal metabox
+// ------------------------------------------------------------------------
+
+function cdashmm_recurring_payments_ad() { ?>
+    <p>
+        <?php _e( 'Manage memberships more efficiently with the <strong><a href="https://chamberdashboard.com/downloads/recurring-payments/?utm_source=plugin&utm_medium=membership-renewal-box&utm_campaign=member-manager" target="_blank">Recurring Payments</a></strong> plugin!', 'cdashrp' ); ?>
+    </p>
+    <ul id='cdashmm-advert'>
+        <li>
+            <?php _e( 'Let members sign up for automatic recurring payments', 'cdashrp' ); ?>
+        </li>  
+        <li>
+            <?php _e( 'Automatically generate and send annual membership invoices', 'cdashrp' ); ?>
+        </li>
+        <li>
+            <?php _e( 'Automatically send past due invoice reminders', 'cdashrp' ); ?>
+        </li>
+    </ul>
+
+<?php }
+
+add_action( 'cdashmm_membership_renewal_metabox', 'cdashmm_recurring_payments_ad', 10 );
 
 ?>
