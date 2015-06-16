@@ -259,7 +259,7 @@ function cdashmm_parse_paypal_ipn_request( $wp ) {
                         if( "subscr_payment" == $_POST['txn_type'] ) {
                              $receipt_message .= '<p>' . __( 'You have signed up for automatic recurring payments through PayPal.  If you need to cancel this recurring payment, you can do so by finding the "My preapproved payments" page of your PayPal account.', 'cdashmm' ) . '</p>';
                         }
-                        $receipt_from = $options['receipt_from_name'] . "<" . $options['receipt_from_email'] . ">";
+                        $receipt_from = $options['receipt_from_name'] . " <" . $options['receipt_from_email'] . ">";
 
                         cdashmm_send_email( $receipt_from, $receipt_to, '', $receipt_subject, $receipt_message );
 

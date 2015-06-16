@@ -524,7 +524,7 @@ function cdashmm_process_membership_form() {
 	    $receipt_subject = __( 'Invoice from ', 'cdashmm' ) . $options['orgname'];
 	    $receipt_message = $options['check_message'];
     	$receipt_message .= '<p><strong>' . __( 'View the invoice: ', 'cdashmm' ) . '</strong><a href="' . get_the_permalink( $invoice ) . '">' . get_the_permalink( $invoice ) . '</a></p>';
-        $receipt_from = "From: " . $options['receipt_from_name'] . "<" . $options['receipt_from_email'] . ">";
+        $receipt_from = "From: " . $options['receipt_from_name'] . " <" . $options['receipt_from_email'] . ">";
 
         cdashmm_send_email( $receipt_from, $receipt_to, '', $receipt_subject, $receipt_message );
 

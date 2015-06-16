@@ -77,6 +77,9 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.8.8 =
+* prevent email "from" field from cutting off last character
+
 = 1.8.7 =
 * more HTML tags allowed in editor fields on options page
 * make HTML emails retain line breaks
