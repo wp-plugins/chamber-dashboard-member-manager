@@ -3,7 +3,7 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.8.8
+Version: 1.8.9
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 Text Domain: cdashmm
@@ -297,10 +297,12 @@ add_action( 'init', 'cdashmm_register_cpt_invoice', 0 );
 
 // tell robots not to index invoices
 function cdashmm_hide_invoices_from_robots() {
-    $output= '<meta name="robots" content="noindex,follow" />';
-    echo $output;
+    if( is_singular( 'invoice' ) ) {
+        $output= '<meta name="robots" content="noindex,follow" />';
+        echo $output;
+    }
 }
-add_action('wp_head','cdashmm_hide_invoices_from_robots');
+add_action( 'wp_head','cdashmm_hide_invoices_from_robots' );
 
 // add unique string to invoice URLs
 // http://stackoverflow.com/questions/4518527/customize-the-auto-generation-of-post-slug-in-wordpress
