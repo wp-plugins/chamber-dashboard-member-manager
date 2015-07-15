@@ -74,7 +74,7 @@ jQuery(document).ready(function ($) {
         var nonce = $('#cdashmm_notification_nonce').val();
         var send_to = $('.send_to:checked').serialize();
         var copy_to = $('.copy_to:checked').serialize();
-        var message = $('#message').val();
+        var message = $('#custom-message').val();
 
         var data = {
             'action': 'cdashmm_send_invoice_notification_email',
