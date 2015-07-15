@@ -77,6 +77,11 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 1.9.0 =
+* stop escaping quotes on invoice notifications sent through the invoice page sidebar
+* billing email field can now accept comma-separated list of emails
+* receipt reply-to email from settings page is included in list of cc emails for invoice notification
+
 = 1.8.9 =
 * make sure only invoices are not indexed by robots
 

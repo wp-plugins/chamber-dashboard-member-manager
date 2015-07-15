@@ -16,9 +16,17 @@
 						// get the billing email 
 						global $billing_metabox;
 						$billingmeta = $billing_metabox->the_meta();
-						if( isset ( $billingmeta['billing_email'] ) ) { ?>
-				    		<input type="checkbox" name="send_to[]" class="send_to" value="<?php echo $billingmeta['billing_email']; ?>" checked="checked"><?php echo $billingmeta['billing_email']; ?><br />
+						if( isset ( $billingmeta['billing_email'] ) ) {
+							if( strpos( $billingmeta['billing_email'], ',' ) ) {
+								// we have a comma-separated list, so we need to split this into different fields
+								$emails = explode( ',', $billingmeta['billing_email'] );
+								foreach( $emails as $email ) { ?>
+									<input type="checkbox" name="send_to[]" class="send_to" value="<?php echo $email; ?>" checked="checked"><?php echo $email; ?><br />
+								<?php }
+							} else { ?>
+				    			<input type="checkbox" name="send_to[]" class="send_to" value="<?php echo $billingmeta['billing_email']; ?>" checked="checked"><?php echo $billingmeta['billing_email']; ?><br />
 				    	<?php }
+				    	}
 				    	// get other associated emails
 				    	global $buscontact_metabox;
 						$contactmeta = $buscontact_metabox->the_meta();
@@ -45,12 +53,17 @@
 			?>
 		<label><?php _e( 'Send Copy To:', 'cdashmm' ); ?></label>
 			<input type="checkbox" name="copy_to[]" class="copy_to" value="<?php echo get_option( 'admin_email' ); ?>"><?php echo get_option( 'admin_email' ); ?><br />
+			<?php $options = $options = get_option( 'cdashmm_options' );
+			$reply_to = $options['receipt_from_email']; 
+			if( isset( $reply_to ) && $reply_to !== get_option( 'admin_email' ) ) { ?>
+				<input type="checkbox" name="copy_to[]" class="copy_to" value="<?php echo $reply_to; ?>"><?php echo $reply_to; ?><br />
+			<?php } ?>
 		<label><?php _e( 'Custom Message:', 'cdashmm' ); ?></label>
 			<textarea id="custom-message" name="message" placeholder="<?php _e( 'Optional. This message will appear at the top of your email.', 'cdashmm' ); ?>"></textarea>
 		
 		<input name="cdashmm_notification_nonce" id="cdashmm_notification_nonce" type="hidden" value="<?php echo wp_create_nonce( 'cdashmm_notification_nonce' ); ?>">
 		<input name="invoice_id" id="invoice_id" type="hidden" value="<?php echo $post->ID; ?>">
-		<a class="button" id="notification_submit">Send Email</a>
+		<a class="button" id="notification_submit"><?php _e( 'Send Email', 'cdashmm' ); ?></a>
 
 		<div id="result"></div>
 	</form>

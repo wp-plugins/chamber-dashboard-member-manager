@@ -3,7 +3,7 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.8.9
+Version: 1.9.0
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 Text Domain: cdashmm
@@ -1251,7 +1251,7 @@ function cdashmm_send_invoice_notification_email() {
 
     $message = '';
     if( isset( $_POST['message'] ) && $_POST['message'] !== '' ) {
-        $message .= '<p>' . implode( "<br />", array_map( 'sanitize_text_field', explode( "\n", $_POST['message'] ) ) ) . '</p><br />';
+        $message .= '<p>' . stripslashes( implode( "<br />", array_map( 'sanitize_text_field', explode( "\n", $_POST['message'] ) ) ) ) . '</p><br />';
     }
     $message .= '<p><strong>' . __( 'Invoice from: ', 'cdashmm' ) . '</strong>' . $options['receipt_from_name'] . '</p>';
     $message .= '<p><strong>' . __( 'Invoice #: ', 'cdashmm' ) . '</strong>' . $invoiceinfo['invoice_number'] . '</p>';
