@@ -11,8 +11,16 @@ jQuery(document).ready(function ($) {
         };
         // update the subtotal, then add it to the donation to get the total
         $.post(url, data, function (response) {
-            $("#subtotal").val(response);
+            membership = parseInt( response );
+            var fee = +$("#processing").val();
+            if( isNaN( fee ) ) {
+                var fee = 0;
+            }
+            $("#subtotal").val(membership+fee);
             var val1 = +$("#donation").val();
+            if( isNaN( val1 ) ) {
+                val1 = 0;
+            }
             var val2 = +$("#subtotal").val();
             $(".total").val(val1+val2);
             $("#amount_1").val(response);
@@ -22,6 +30,9 @@ jQuery(document).ready(function ($) {
 // when the donation amount changes, add it to the subtotal to get the total
     $("#donation").on("change", function(){
           var val1 = +$("#donation").val();
+          if( isNaN( val1 ) ) {
+                val1 = 0;
+            }
           var val2 = +$("#subtotal").val();
           $(".total").val(val1+val2);
           $("#amount_2").val(val1);
@@ -97,12 +108,22 @@ jQuery(document).ready(function ($) {
         if($(this).attr("value")=="no"){
            $('.recurring-field').remove();
            var donation = $('#donation').val();
+           if( isNaN( val1 ) ) {
+                val1 = 0;
+            }
+            var fee = +$("#processing").val();
+            if( isNaN( fee ) ) {
+                var fee = 0;
+            }
            // note to self - this code is also in views.php, function cdashmm_paypal_hidden_fields
             var fields = "<input type='hidden' class='paypal cart cmd' name='cmd' value='_cart'>\
             <input type='hidden' class='paypal cart upload' name='upload' value='1' />\
             <input type='hidden' class='paypal cart item_name_1' name='item_name_1' value='Membership'>\
             <input type='hidden' class='paypal cart amount_1' name='amount_1' id='amount_1' value=''>\
-            <input type='hidden' class='paypal cart item_name_2' name='item_name_2' value='Donation'><input type='hidden' class='paypal cart amount_2' name='amount_2' id='amount_2' value='" + donation + ">";
+            <input type='hidden' class='paypal cart item_name_2' name='item_name_2' value='Donation'>\
+            <input type='hidden' class='paypal cart amount_2' name='amount_2' id='amount_2' value='" + donation + ">\
+            <input type='hidden' class='paypal cart item_name_3' name='item_name_3' value='Processing Fee'>\
+            <input type='hidden' class='paypal cart amount_3' name='amount_3' id='amount_3' value='" + fee + ">            ";
             $('.hidden-paypal-fields').append(fields);
         }
     });

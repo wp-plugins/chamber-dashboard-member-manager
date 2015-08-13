@@ -172,13 +172,24 @@ function cdashmm_options_init(  ) {
 	);
 
 	add_settings_field( 
+		'no_donation', 
+		__( 'Remove Donation Field', 'cdashmm' ), 
+		'cdashmm_no_donation_render', 
+		'cdashmm_plugin_options', 
+		'cdashmm_main_section',
+		array(
+			 __( 'By default, the membership form includes an optional donation field.  Check this box if you do not want the donation field.', 'cdashmm' )
+		)
+	);
+
+	add_settings_field( 
 		'suggested_donation', 
 		__( 'Suggested Donation Amount', 'cdashmm' ), 
 		'cdashmm_suggested_donation_render', 
 		'cdashmm_plugin_options', 
 		'cdashmm_main_section',
 		array(
-			 __( 'The membership form includes a field for optional donation.  If you want this field to be pre-filled with a donation amount, enter that amount here (number only, no currency symbols).', 'cdashmm' )
+			 __( 'If you want the suggested donation field to be pre-filled with a donation amount, enter that amount here (number only, no currency symbols).', 'cdashmm' )
 		)
 	);
 
@@ -192,6 +203,29 @@ function cdashmm_options_init(  ) {
 			__( 'This text will appear on the membership form next to the suggested donation field.  It can include information about how your donation will be used, such as "Your donation supports local schools."', 'cdashmm' )
 		)
 	);
+
+	add_settings_field( 
+		'use_processing_fee', 
+		__( 'Processing Fee', 'cdashmm' ), 
+		'cdashmm_use_processing_fee_render', 
+		'cdashmm_plugin_options', 
+		'cdashmm_main_section',
+		array(
+			__( 'Check this box if you want to add a processing fee to membership transactions.', 'cdashmm' )
+		)
+	);
+
+	add_settings_field( 
+		'processing_fee_amount', 
+		__( 'Processing Fee', 'cdashmm' ), 
+		'cdashmm_processing_fee_amount_render', 
+		'cdashmm_plugin_options', 
+		'cdashmm_main_section',
+		array(
+			__( 'Enter the amount of the processing fee (number only, no currency symbols).', 'cdashmm' )
+		)
+	);
+
 
 	add_settings_field( 
 		'lapse_membership', 
@@ -328,6 +362,16 @@ function cdashmm_invoice_footer_render( $args ) {
 
 }
 
+function cdashmm_no_donation_render( $args ) { 
+
+	$options = get_option( 'cdashmm_options' );
+	?>
+	<input type='checkbox' name='cdashmm_options[no_donation]' <?php checked( $options['no_donation'], 1 ); ?> value='1'>
+	<span class="description"><?php echo $args[0]; ?></span>
+	<?php
+
+}
+
 
 function cdashmm_suggested_donation_render( $args ) { 
 
@@ -349,6 +393,28 @@ function cdashmm_donation_explanation_render( $args ) {
 	<?php
 
 }
+
+
+function cdashmm_use_processing_fee_render( $args ) { 
+
+	$options = get_option( 'cdashmm_options' );
+	?>
+	<input type='checkbox' name='cdashmm_options[use_processing_fee]' <?php checked( $options['use_processing_fee'], 1 ); ?> value='1'>
+	<span class="description"><?php echo $args[0]; ?></span>
+	<?php
+
+}
+
+function cdashmm_processing_fee_amount_render( $args ) { 
+
+	$options = get_option( 'cdashmm_options' );
+	?>
+	<input type='number' name='cdashmm_options[processing_fee_amount]' value='<?php echo $options['processing_fee_amount']; ?>'>
+	<br /><span class="description"><?php echo $args[0]; ?></span>
+	<?php
+
+}
+
 
 function cdashmm_lapse_membership_render( $args ) { 
 
@@ -435,6 +501,10 @@ function cdashmm_validate_options( $input ) {
     	$input['donation_explanation'] = strip_tags( stripslashes( $input['donation_explanation'] ) );
     }
 
+    if( isset( $input['processing_fee_amount'] ) ) {
+    	$input['processing_fee_amount'] = strip_tags( stripslashes( $input['processing_fee_amount'] ) );
+    }
+
     if( isset( $input['invoice_cc'] ) ) {
     	$input['invoice_cc'] = strip_tags( stripslashes( $input['invoice_cc'] ) );
     }
@@ -475,7 +545,7 @@ function cdashmm_validate_options( $input ) {
 function cdashmm_options_page(  ) { 
 
 	?>
-	<h2><?php _e( 'Chamber Dashboard Member Manager', 'cdashmm' ); ?></h2>
+	<h1><?php _e( 'Chamber Dashboard Member Manager', 'cdashmm' ); ?></h1>
 	<?php settings_errors(); ?>
 	<div id="main" style="width: 70%; min-width: 350px; float: left;">
 		<form action='options.php' method='post'>

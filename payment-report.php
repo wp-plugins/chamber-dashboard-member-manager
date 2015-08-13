@@ -10,7 +10,7 @@ add_action('admin_menu', 'cdashmm_add_payment_reports_page');
 
 function cdashmm_generate_payment_report() { ?>
 
-		<h2><?php _e( 'Payment Report', 'cdashmm' ); ?></h2>
+		<h1><?php _e( 'Payment Report', 'cdashmm' ); ?></h1>
 	
 		<form method='post' action='<?php echo admin_url( 'edit.php?post_type=invoice&page=payment-report'); ?>' id='payment-report'>
 			<table class="form-table">
@@ -61,7 +61,7 @@ function cdashmm_generate_payment_report() { ?>
 				$total = 0;
 				
 				// The Loop
-				if ( $invoice_query->have_posts() ) : ?>
+				if ( $invoice_query->have_posts() ) { ?>
 					<form method='post' action='<?php echo admin_url( 'edit.php?post_type=invoice&page=payment-report'); ?>' id='payment-report'>
 						<input type="hidden" name="start_date" id="start_date" value="<?php echo $_POST['start_date']; ?>" />
 						<input type="hidden" name="end_date" id="end_date" value="<?php echo $_POST['end_date']; ?>"  />
@@ -79,6 +79,7 @@ function cdashmm_generate_payment_report() { ?>
 								<th><?php _e( 'Business', 'cdashrp' ); ?></th>
 								<th><?php _e( 'Invoice #', 'cdashrp' ); ?></th>
 								<th><?php _e( 'Amount', 'cdashrp' ); ?></th>
+								<th><?php _e( 'Membership Level', 'cdashrp' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -92,6 +93,11 @@ function cdashmm_generate_payment_report() { ?>
 	        					if( isset( $invoice_meta['amount'] ) ) {
 	        						$total += $invoice_meta['amount'];
 	        						$amount = cdashmm_display_price( $invoice_meta['amount'] );
+	        					}
+	        					$level = '';
+	        					if( isset( $invoice_meta['item_membershiplevel'] ) ) {
+	        						$level_term = get_term_by( 'id', $invoice_meta['item_membershiplevel'], 'membership_level' );;
+	        						$level = $level_term->name;
 	        					}
 	        					$thisbusiness = get_posts( array(
 								  'connected_type' => 'invoices_to_businesses',
@@ -127,6 +133,9 @@ function cdashmm_generate_payment_report() { ?>
 									<td>
 										<?php echo $amount; ?>
 									</td>
+									<td>
+										<?php echo $level; ?>
+									</td>
 								</tr>
 							<?php endwhile; ?>
 						</tbody>
@@ -149,7 +158,9 @@ function cdashmm_generate_payment_report() { ?>
 							<input type="submit" class="button-primary" value="<?php _e( 'Download This Report', 'cdashmm' ) ?>" />
 						</p>
 					</form>
-				<?php endif;
+				<?php } else {
+					_e( 'No payments were found within that date range', 'cdashmm' ); 
+				}
 				
 				// Reset Post Data
 				wp_reset_postdata();
@@ -180,6 +191,7 @@ function cdashmm_download_payment_report_csv() {
 				__( 'Date Paid', 'cdashmm' ),
 				__( 'Invoice #', 'cdashmm' ),
 				__( 'Amount', 'cdashmm' ),
+				__( 'Membership Level', 'cdashmm' ),
 				__( 'Business', 'cdashmm' ),
 				__( 'View Invoice', 'cdashmm' ),
 				__( 'Edit Invoice', 'cdashmm' ),
@@ -239,6 +251,14 @@ function cdashmm_download_payment_report_csv() {
 						// Amount
 						if( isset( $invoice_meta['amount'] ) ) {
     						$fields[] = cdashmm_display_price( $invoice_meta['amount'] );
+    					} else {
+    						$fields[] = ' ';
+    					}
+
+    					// Membership Level
+    					if( isset( $invoice_meta['item_membershiplevel'] ) ) {
+    						$level_term = get_term_by( 'id', $invoice_meta['item_membershiplevel'], 'membership_level' );;
+    						$fields[] = $level_term->name;
     					} else {
     						$fields[] = ' ';
     					}

@@ -142,16 +142,32 @@ function cdashmm_membership_signup_form() {
 					$member_form .= '</select>';
 					$starting_price = 0;
 				}
-			$member_form .= '</p>
-			<input name="subtotal" type="hidden" id="subtotal" value="' . $starting_price . '">
-			<p>
-				<label>' . __( 'Optional Donation', 'cdashmm' ) . '</label>
-				<input name="donation" type="number" min="0" id="donation" value="' . $options['suggested_donation'] . '">';
-				$starting_price += $options['suggested_donation'];
-				if( isset( $options['donation_explanation'] ) ) {
-					$member_form .= '<br /><span class="donation_explanation">' . $options['donation_explanation'] . '</span>';
+			$member_form .= '</p>';
+			if( isset( $options['use_processing_fee'] ) ) {
+				if( isset( $options['processing_fee_amount'] ) ) {
+					$fee = $options['processing_fee_amount'];
+				} else {
+					$fee = 0;
 				}
-			$member_form .= '</p>
+				$member_form .= '<p>
+					<label>' . __( 'Processing Fee', 'cdashmm' ) . '</label>
+					<input disabled name="processing" type="number" min="0" id="processing" value="' . $fee . '">';
+					$starting_price += $fee;
+				$member_form .= '</p>';
+			}
+			$member_form .= '
+			<input name="subtotal" type="hidden" id="subtotal" value="' . $starting_price . '">';
+			if( !isset( $options['no_donation'] ) ) {
+				$member_form .= '<p>
+					<label>' . __( 'Optional Donation', 'cdashmm' ) . '</label>
+					<input name="donation" type="number" min="0" id="donation" value="' . $options['suggested_donation'] . '">';
+					$starting_price += $options['suggested_donation'];
+					if( isset( $options['donation_explanation'] ) ) {
+						$member_form .= '<br /><span class="donation_explanation">' . $options['donation_explanation'] . '</span>';
+					}
+				$member_form .= '</p>';
+			}
+			$member_form .= '
 			<p class="total">
 				<label>' . __( 'Total Due: ', 'cdashmm' ) . '</label>
 				<input name="total" id="total" class="total" value="' . $starting_price . '" disabled>
@@ -200,6 +216,16 @@ add_shortcode( 'membership_form', 'cdashmm_membership_signup_form' );
 function cdashmm_paypal_cart_fields() {
 	global $member_form;
 	$options = get_option( 'cdashmm_options' );
+	if( isset( $options['processing_fee_amount'] ) ) {
+		$fee = $options['processing_fee_amount'];
+	} else {
+		$fee = 0;
+	}
+	if( isset( $options['no_donation'] ) ) {
+		$donation = 0;
+	} else {
+		$donation = $options['suggested_donation']; 
+	}
 	// note to self - this code is also in membership.js
 	$member_form .= 
 	'<input type="hidden" class="paypal cart cmd" name="cmd" value="_cart">
@@ -207,7 +233,9 @@ function cdashmm_paypal_cart_fields() {
 	<input type="hidden" class="paypal cart item_name_1" name="item_name_1" value="' . __( 'Membership', 'cdashmm' ) . '">
 	<input type="hidden" class="paypal cart amount_1" name="amount_1" id="amount_1" value="">
 	<input type="hidden" class="paypal cart item_name_2" name="item_name_2" value="' . __( 'Donation', 'cdashmm' ) . '">
-	<input type="hidden" class="paypal cart amount_2" name="amount_2" id="amount_2" value="' . $options['suggested_donation'] . '">';
+	<input type="hidden" class="paypal cart amount_2" name="amount_2" id="amount_2" value="' . $donation . '">
+	<input type="hidden" class="paypal cart item_name_3" name="item_name_3" value="' . __( 'Processing Fee', 'cdashmm' ) . '">
+	<input type="hidden" class="paypal cart amount_3" name="amount_3" id="amount_3" value="' . $fee . '">';
 
 }
 add_action( 'cdashmm_paypal_hidden_fields', 'cdashmm_paypal_cart_fields', 10 );

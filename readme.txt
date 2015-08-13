@@ -77,6 +77,12 @@ For now, PayPal is the only accepted payment method.  Soon, extensions will be a
 4. Payment report
 
 == Changelog ==
+= 2.0 =
+* added an option to remove the donation field from the membership form
+* added an optional processing fee to the membership form
+* changed H2s to H1s to comply with new accessibility recommendations
+* added membership level to recent payment report
+
 = 1.9.0 =
 * stop escaping quotes on invoice notifications sent through the invoice page sidebar
 * billing email field can now accept comma-separated list of emails

@@ -3,13 +3,13 @@
 Plugin Name: Chamber Dashboard Member Manager
 Plugin URI: http://chamberdashboard.com
 Description: Manage the membership levels and payments for your chamber of commerce or other membership based organization
-Version: 1.9.0
+Version: 2.0
 Author: Morgan Kay
 Author URI: http://wpalchemists.com
 Text Domain: cdashmm
 */
 
-/*  Copyright 2014 Morgan Kay and the Fremont Chamber of Commerce (email : info@chamberdashboard.com)
+/*  Copyright 2015 Morgan Kay and Chamber Dashboard (email : info@chamberdashboard.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -398,7 +398,6 @@ function cdashmm_invoice_script_enqueue($hook) {
         if ( ( isset( $post ) && ( 'invoice' === $post->post_type || 'business' === $post->post_type ) ) || 'invoice_page_payment-report' == $hook ) {       
             wp_enqueue_script( 'invoice-meta', plugin_dir_url(__FILE__) . 'js/invoices.js', array( 'jquery' ) );
             wp_localize_script( 'invoice-meta', 'invoiceajax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) ); 
-
 
             global $wp_locale;
 
